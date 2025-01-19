@@ -1,0 +1,44 @@
+{
+  "appId": "Assistant",
+  "asar": false,
+  "directories": {
+    "output": "release/${version}"
+  },
+  "files": [
+    "dist"
+  ],
+  "mac": {
+    "artifactName": "${productName}.${ext}",
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "icon": "dist/icons/icon.icns"
+  },
+  "linux": {
+    "icon": "dist/icons/512x512.png",
+    "artifactName": "${productName}.${ext}"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "${productName}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false
+  },
+  "publish": {
+    "provider": "generic",
+    "channel": "latest",
+    "url": "https://github.com/electron-vite/electron-vite-react/releases/download/v0.9.9/"
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, ChangeEvent } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import DrawerComponent from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -9,9 +9,12 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
+import TextField from '@mui/material/TextField';
 import ListItemText from '@mui/material/ListItemText';
-import MailIcon from '@mui/icons-material/Mail';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import AddBoxIcon from '@mui/icons-material/AddBox';
+import { Box } from '@mui/material';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -21,10 +24,19 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
+interface DrawerProps { 
+  selected: string | undefined, 
+  onClose: () => void,
+  onSelect: (id: number, name: string) => void, 
+  isOpen: boolean, 
+  width: number 
+}
 
-export default function Drawer({ onClose, onSelect, isOpen, selected, width } : { selected: string | undefined, onClose: () => void, onSelect: (name: string) => void, isOpen: boolean, width: number }) {
+export default function Drawer({ onClose, onSelect, isOpen, selected, width } : DrawerProps) {
     const theme = useTheme();
-    const [ topics, setTopics ] = useState([]);
+    const [ topics, setTopics ] = useState<any[]>([]);
+    const [ editingTopic, setEditingTopic ] = useState<Record<string, string | number>>({});
+    const dropdownRef = useRef<any>(null);
 
     const fetchTopics = async () => {
       const topics = await window.ipcRenderer.invoke('getTopics');
@@ -43,6 +55,44 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
         await fetchTopics();
       })()
     }, [])
+
+    const onEditTopic = (id: number, title: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+  
+      setEditingTopic({ id, title });
+    }
+
+    const onChangeTopic = ({ target }: ChangeEvent<HTMLInputElement>) => {
+      setEditingTopic(prev => ({ ...prev, title: target?.value }))
+    }
+
+    const handleClickOutside = async (event: any) => {
+      if (dropdownRef?.current && dropdownRef?.current?.contains(event.target)) return;
+
+      if (editingTopic?.id) {
+        await window.ipcRenderer.invoke('updateTopic', editingTopic)
+
+        await fetchTopics()
+      }
+
+      setEditingTopic({});
+    }
+
+    const handleDelete = (id: number) => async (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+  
+      await window.ipcRenderer.invoke('deleteTopic', id);
+
+      await fetchTopics();
+    }
+
+    useEffect(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [ editingTopic ]);
   
     return (
         <DrawerComponent
@@ -72,12 +122,36 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
               <ListItem key={id} disablePadding>
                 <ListItemButton
                   selected = {selected === id}
-                  onClick={() => onSelect(id)}
+                  onClick={() => onSelect(id, title)}
                 >
                   <ListItemIcon>
-                    <MailIcon />
+                    <IconButton size="small" onClick={onEditTopic(id, title)}>
+                      <EditIcon fontSize='small' />
+                    </IconButton>
+                    <IconButton size="small" onClick={handleDelete(id)}>
+                      <DeleteIcon fontSize='small'/>
+                    </IconButton>
                   </ListItemIcon>
-                  <ListItemText primary={title} />
+                  {id === editingTopic?.id ? <TextField 
+                    ref={dropdownRef}
+                    value={editingTopic?.title}
+                    onChange={onChangeTopic}
+                    onClick={(event: React.MouseEvent) => event.stopPropagation()}
+                    id="standard-basic" 
+                    variant="standard" 
+                  /> : 
+                  <ListItemText primary={
+                    <Box 
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                    >
+                      {title}
+                    </Box>
+                  } 
+                  />}
                 </ListItemButton>
               </ListItem>
             ))}

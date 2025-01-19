@@ -1,0 +1,1 @@
+DROP INDEX `messages_topic_id_unique`;
