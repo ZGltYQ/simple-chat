@@ -41,7 +41,12 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
     const fetchTopics = async () => {
       const topics = await window.ipcRenderer.invoke('getTopics');
 
-      if (topics) setTopics(topics);
+      if (topics) {
+        setTopics(topics);
+
+        const updated = topics.find((t:any) => t?.id === selected)
+        onSelect(updated?.id, updated?.title)
+      }
     }
 
     const onCreateTopic = async () => {
@@ -85,6 +90,16 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
 
       await fetchTopics();
     }
+
+    const handleKeyDown = async (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event?.key === 'Enter') {
+        if (editingTopic?.id) {
+          await window.ipcRenderer.invoke('updateTopic', editingTopic)
+  
+          await fetchTopics()
+        }
+      }
+    };
 
     useEffect(() => {
       document.addEventListener('mousedown', handleClickOutside);
@@ -136,6 +151,7 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
                     ref={dropdownRef}
                     value={editingTopic?.title}
                     onChange={onChangeTopic}
+                    onKeyDown={handleKeyDown}
                     onClick={(event: React.MouseEvent) => event.stopPropagation()}
                     id="standard-basic" 
                     variant="standard" 

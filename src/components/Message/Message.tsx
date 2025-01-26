@@ -9,11 +9,11 @@ const MessageComponent = styled(Paper)(({ theme }) => ({
     ...theme.typography.body2
 }));
 
-export default function Message({ text, sender } : { text: string, sender: string }) {
+export default function Message({ text, sender, created } : { text: string, sender: string, created: string }) {
     return (
         <div style={{ display: 'flex', columnGap: 15, alignSelf: sender === 'User' ? 'flex-start' : 'flex-end' }}>
             {sender === 'User' && <Avatar>{sender}</Avatar>}
-            <MessageComponent square>
+            <MessageComponent sx={{ display: 'flex', flexDirection: 'column' }} square>
                 <ReactMarkdown
                     components={{
                     code(props: any) {
@@ -38,6 +38,7 @@ export default function Message({ text, sender } : { text: string, sender: strin
                 >
                 {text}
                 </ReactMarkdown>
+                <div style={{ fontSize: 10, alignSelf: sender === 'User' ? 'flex-start' : 'flex-end' }}>{created}</div>
             </MessageComponent>
             {sender !== 'User' && <Avatar>{sender}</Avatar>}
         </div>

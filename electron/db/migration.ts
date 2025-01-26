@@ -25,6 +25,10 @@ const migrations = [
         "id" integer PRIMARY KEY NOT NULL,
         "api_token" text NOT NULL
         );`
+    },
+    {
+        name: 'add_created_to_message',
+        query: `ALTER TABLE messages ADD COLUMN created DATETIME DEFAULT CURRENT_TIMESTAMP;`
     }
 ]
 

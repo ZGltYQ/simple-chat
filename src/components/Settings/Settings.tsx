@@ -34,7 +34,7 @@ export default function FullScreenDialog({ openai }: { openai: any }) {
             dangerouslyAllowBrowser: true,
             apiKey: formData?.api_token 
         });
-        
+
         setFormData(formData)
     })()
   }, [ open ])
@@ -48,7 +48,6 @@ export default function FullScreenDialog({ openai }: { openai: any }) {
   };
 
   const handleSave = async () => {
-    console.log({ formData })
     await window.ipcRenderer.invoke('createSettings', formData);
     handleClose();
   }

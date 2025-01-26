@@ -5,6 +5,7 @@ export const messagesTable = sqliteTable("messages", {
   text: text().notNull(),
   sender: text().notNull(),
   topic_id: int().notNull(),
+  created: text()
 });
 
 export const topicsTable = sqliteTable("topics", {
