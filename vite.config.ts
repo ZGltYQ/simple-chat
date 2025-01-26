@@ -8,10 +8,11 @@ import pkg from './package.json'
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   rmSync('dist', { recursive: true, force: true });
-  rmSync(`release/${pkg?.version}`, { recursive: true, force: true });
 
   const isServe = command === 'serve'
   const isBuild = command === 'build'
+
+  if (isBuild) rmSync(`release/${pkg?.version}`, { recursive: true, force: true });
 
   return {
     resolve: {

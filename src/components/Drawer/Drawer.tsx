@@ -45,7 +45,7 @@ export default function Drawer({ onClose, onSelect, isOpen, selected, width } : 
         setTopics(topics);
 
         const updated = topics.find((t:any) => t?.id === selected)
-        onSelect(updated?.id, updated?.title)
+        if (updated) onSelect(updated?.id, updated?.title);
       }
     }
 

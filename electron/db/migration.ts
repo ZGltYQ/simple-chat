@@ -28,15 +28,19 @@ const migrations = [
     },
     {
         name: 'add_created_to_message',
-        query: `ALTER TABLE messages ADD COLUMN created DATETIME DEFAULT CURRENT_TIMESTAMP;`
+        query: `ALTER TABLE messages ADD COLUMN created DATETIME;`
     }
 ]
 
 export default async function runMigration(db: LibSQLDatabase) {
-    db.run(`CREATE TABLE "migrations" (
-    "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "name" text NOT NULL
-    );`).catch();
+    const tables = await db.run(`SELECT name FROM sqlite_master WHERE type='table';`);
+
+    if (!tables?.rows.find(({ name }) => name === "migrations")) {
+        await db.run(`CREATE TABLE "migrations" (
+            "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            "name" text NOT NULL
+        );`)
+    }
 
     const existedMigrations : string[] = (await db.select({ name: migrationsTable?.name }).from(migrationsTable)).map(({ name }) => name);
 
