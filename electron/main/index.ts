@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { eq } from 'drizzle-orm';
 import { createClient } from '@libsql/client';
 import runMigration from '../db/migration';
-import { topicsTable, messagesTable, settingsTable } from '../db/schema'
+import { topicsTable, messagesTable, settingsTable, imagesTable } from '../db/schema'
 
 const client = createClient({ url: 'file:story' });
 const db = drizzle(client);
@@ -36,6 +36,8 @@ async function createWindow() {
     title: 'Assistant',
     icon: path.join(APP_ROOT, 'icons/256x256.png'),
     webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
       preload
     },
   })
@@ -53,8 +55,8 @@ async function createWindow() {
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https:')) shell.openExternal(url);
-
+    shell.openExternal(url);
+    
     return { action: 'deny' }
   })
 }
@@ -85,19 +87,48 @@ app.on('second-instance', () => {
   })
 
   ipcMain.handle('getMessages', async (_, topic_id) => {
-    const result = await db.select().from(messagesTable).where(eq(messagesTable.topic_id, topic_id))
+    // Retrieve messages for the given topic_id
+    const messages = await db.select().from(messagesTable).where(eq(messagesTable.topic_id, topic_id));
 
-    return result;
+    // Retrieve images for the given topic_id
+    const images = await db.select().from(imagesTable).where(eq(imagesTable.topic_id, topic_id));
+
+    // Define the type for the accumulator object
+    type ImagesByMessageId = {
+      [key: number]: {
+        id: number;
+        topic_id: number;
+        base64_image: string;
+        message_id: number;
+      }[];
+    };
+
+    // Group images by message_id
+    const imagesByMessageId = images.reduce<ImagesByMessageId>((acc, image) => {
+      if (!acc[image.message_id]) acc[image.message_id] = [];
+      
+      acc[image.message_id].push(image);
+
+      return acc;
+    }, {});
+
+    // Combine messages with their related images
+    const messagesWithImages = messages.map(message => ({
+      ...message,
+      images: imagesByMessageId[message.id] || []
+    }));
+
+    return messagesWithImages;
   })
 
   ipcMain.handle('createMessage', async (_, args) => {
     const response = await db.insert(messagesTable).values(args);
 
-    return response
-  })
+    const lastInsertRowid = Number(response.lastInsertRowid);
 
-  ipcMain.on('updateMessage', (_, message) => {
-    console.log({ message })
+    const insertedMessage = await db.select().from(messagesTable).where(eq(messagesTable.id, lastInsertRowid));
+
+    return insertedMessage[0];
   })
 
   ipcMain.handle('createTopic', async (_, title) => {
@@ -132,9 +163,23 @@ app.on('second-instance', () => {
     return response[0]
   })
 
-  ipcMain.on('deleteTopic', (_, message) => {
-    console.log({ message })
-  })
+  ipcMain.handle('createImage', async (_, args) => {
+    const response = await db.insert(imagesTable).values(args);
+
+    return response;
+  });
+
+  ipcMain.handle('getImagesByMessage', async (_, message_id) => {
+    const response = await db.select().from(imagesTable).where(eq(imagesTable.message_id, message_id));
+
+    return response;
+  });
+
+  ipcMain.handle('getImagesByTopic', async (_, topic_id) => {
+    const response = await db.select().from(imagesTable).where(eq(imagesTable.topic_id, topic_id));
+
+    return response;
+  });
 })();
 
 app.on('activate', () => {

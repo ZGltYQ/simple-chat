@@ -10,7 +10,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { TransitionProps } from '@mui/material/transitions';
-import { TextField } from '@mui/material';
+import Slider from '@mui/material/Slider';
+import { TextField, Typography } from '@mui/material';
 import OpenAI from 'openai';
 
 const Transition = React.forwardRef(function Transition(
@@ -22,14 +23,15 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function FullScreenDialog({ openai }: { openai: any }) {
+export default function FullScreenDialog({ openai, setContextCount }: { openai: any, setContextCount: any }) {
   const [ open, setOpen ] = React.useState(false);
-  const [ formData, setFormData ] = useState<Record<string, string>>({ api_token: '' }) 
+  const [ formData, setFormData ] = useState<Record<string, string | number>>({ api_token: '', context_messages: 30 }); 
 
   useEffect(() => {
     (async () => {
         const formData = await window.ipcRenderer.invoke('getSettings');
 
+        setContextCount(formData?.context_messages);
         openai.current = new OpenAI({ 
             dangerouslyAllowBrowser: true,
             apiKey: formData?.api_token 
@@ -46,6 +48,12 @@ export default function FullScreenDialog({ openai }: { openai: any }) {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const handleSliderChange = (event: Event, value: number | number[]) => {
+    if (typeof value === 'number') {
+      setFormData(prev => ({ ...prev, context_messages: value }));
+    }
+  }
 
   const handleSave = async () => {
     await window.ipcRenderer.invoke('createSettings', formData);
@@ -83,15 +91,25 @@ export default function FullScreenDialog({ openai }: { openai: any }) {
             </Button>
           </Toolbar>
         </AppBar>
-        <List sx={{ margin: 2 }}>
+        <List sx={{ margin: 5, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <TextField
-                fullWidth 
-                id="outlined-basic" 
-                label="OpenAI API Token"
-                onChange={({ target }) => setFormData(prev => ({ ...prev, api_token: target?.value }))}
-                value={formData?.api_token}
-                variant="outlined"
+              fullWidth 
+              id="outlined-basic" 
+              label="OpenAI API Token"
+              onChange={({ target }) => setFormData(prev => ({ ...prev, api_token: target?.value }))}
+              value={formData?.api_token}
+              variant="outlined"
             />
+            <div>
+              <Typography gutterBottom>Amount of messages chat must remember</Typography>
+              <Slider
+                value={formData?.context_messages as number}
+                valueLabelDisplay="on"
+                onChange={handleSliderChange}
+                marks
+              />
+            </div>
+            
         </List>
       </Dialog>
     </React.Fragment>

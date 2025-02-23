@@ -1,7 +1,6 @@
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { migrationsTable } from "./schema";
 
-
 const migrations = [
     {
         name: 'create_messages',
@@ -9,7 +8,9 @@ const migrations = [
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "text" text NOT NULL,
         "sender" text NOT NULL,
-        "topic_id" integer NOT NULL
+        "topic_id" integer NOT NULL,
+        "created" DATETIME,
+        FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
         );`
     },
     {
@@ -23,14 +24,22 @@ const migrations = [
         name: 'settings',
         query: `CREATE TABLE "settings" (
         "id" integer PRIMARY KEY NOT NULL,
-        "api_token" text NOT NULL
+        "api_token" text NOT NULL,
+        "context_messages" INTEGER DEFAULT 30 NOT NULL
         );`
     },
     {
-        name: 'add_created_to_message',
-        query: `ALTER TABLE messages ADD COLUMN created DATETIME;`
+        name: 'create_images',
+        query: `CREATE TABLE "images" (
+        "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+        "base64_image" text NOT NULL,
+        "message_id" integer NOT NULL,
+        "topic_id" integer NOT NULL,
+        FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+        FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+        );`
     }
-]
+];
 
 export default async function runMigration(db: LibSQLDatabase) {
     const tables = await db.run(`SELECT name FROM sqlite_master WHERE type='table';`);

@@ -87,7 +87,9 @@ function App() {
   const [ isOpen, setIsOpen ] = useState(true);
   const [ isProcessing, setIsProcessing ] = useState(false);
   const [ selectedTopic, setSelectedTopic ] = useState<Record<string, any>>();
-  const [ messages, setMessages ] = useState<{ text: string, sender: 'User' | 'Ai', created: string }[]>([]);
+  const [ messages, setMessages ] = useState<{ text: string, sender: 'User' | 'Ai', created: string, images?: any[] | null }[]>([]);
+  const [ contextCount, setContextCount ] = useState<number>(30);
+  const [ images, setImages ] = useState<string[]>([]);
   const messagesRef = useRef<HTMLDivElement>(null);
 
   const inputRef = useRef<{ value: string }>({ value: '' });
@@ -95,24 +97,44 @@ function App() {
 
   const handleSubmit = async () => {
     setIsProcessing(true)
-    const input = inputRef.current?.value || '';
-    inputRef.current.value = '';
+
+    setImages([]);
     const created = formatDate(new Date());
+
+    const message = await window.ipcRenderer.invoke('createMessage', { text: inputRef.current?.value || '', sender: 'User', topic_id: selectedTopic?.id, created });
+
+    inputRef.current.value = '';
+
+    const createdImages: any = [];
+
+    if (images?.length) {
+      await window.ipcRenderer.invoke('createImage', images.map(image => ({ base64_image: image, topic_id: selectedTopic?.id, message_id: message?.id })));
+
+      const imgs = await window.ipcRenderer.invoke('getImagesByMessage', message?.id)
+
+      createdImages.push(...imgs);
+    }
 
     setMessages(prev => [
       ...prev,
-      { text: input, sender: 'User', topic_id: selectedTopic?.id, created },
+      { text: message?.text, images: createdImages, sender: 'User', topic_id: selectedTopic?.id, created },
       { text: '', sender: 'Ai', topic_id: selectedTopic?.id, created }
     ]);
 
-    await window.ipcRenderer.invoke('createMessage', { text: input, sender: 'User', topic_id: selectedTopic?.id, created });
-
     const stream = await (openai?.current?.chat.completions as any).create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [ 
-        ...messages.map(message => ({
+        ...messages.slice(messages?.length - contextCount, messages?.length).map(message => ({
           "role": message?.sender === 'User' ? "user" : "assistant",
           "content": [
+            ...(message?.images || []).map(image => {
+              return {
+                "type": "image_url",
+                "image_url": {
+                  "url": image?.base64_image
+                }
+              }
+            }),
             {
               "type": "text",
               "text": message?.text
@@ -122,9 +144,17 @@ function App() {
         {
           "role": 'user',
           "content": [
+            ...images.map(image => {
+              return {
+                "type": "image_url",
+                "image_url": {
+                  "url": image
+                }
+              }
+            }),
             {
               "type": "text",
-              "text": input
+              "text": message?.text
             }
           ]
         }
@@ -197,6 +227,23 @@ function App() {
     if (event?.key === 'Enter' && !event.shiftKey && !isProcessing) handleSubmit();
   };
 
+  const handlePaste = async (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = event.clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64Image = e.target?.result;
+            if (typeof base64Image === 'string') setImages(prev => [ ...prev, base64Image ]); // Set the image preview
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+  };
+
   return (
     <>
     <AppBar position="fixed" open={isOpen}>
@@ -218,7 +265,7 @@ function App() {
             <Typography variant="h6" noWrap component="div">
               {selectedTopic?.topic}
             </Typography>
-            <Settings openai={openai} />
+            <Settings openai={openai} setContextCount={setContextCount} />
         </AppToolbar>
       </AppBar>
         <Drawer
@@ -240,12 +287,19 @@ function App() {
               overflowY: 'auto' 
             }
           }>
-            {messages.map(({ text, sender, created }, index) => (
-              <Message key={index} text={text} sender={sender} created={created} />
+            {messages.map(({ text, sender, created, images }, index) => (
+              <Message key={index} text={text} images={images} sender={sender} created={created} />
             ))}
           </div>
           {selectedTopic?.id ? (
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
+              {images?.length ? (
+                <div style={{ marginTop: 10 }}>
+                  {images.map((image, index) => (
+                    <img key={index} src={image} alt="Preview" style={{ maxWidth: 100, maxHeight: 100, marginRight: 10 }} />
+                  ))}
+                </div>
+              ) : null}
               <TextField 
                 sx={{
                   maxWidth: '50%', 
@@ -260,6 +314,7 @@ function App() {
                 multiline
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
                 variant="outlined" 
                 slotProps={{
                   input: {
