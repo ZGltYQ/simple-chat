@@ -38,7 +38,11 @@ const migrations = [
         FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
         FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
         );`
-    }
+    },
+    {
+        name: 'settings_add_model_field',
+        query: `ALTER TABLE "settings" ADD COLUMN "model" TEXT DEFAULT "gpt-4o" NOT NULL;`
+    },
 ];
 
 export default async function runMigration(db: LibSQLDatabase) {

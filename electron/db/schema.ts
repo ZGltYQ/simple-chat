@@ -22,7 +22,8 @@ export const migrationsTable = sqliteTable('migrations', {
 export const settingsTable = sqliteTable('settings', {
   id: int().primaryKey(),
   api_token: text().notNull(),
-  context_messages: int().notNull()
+  context_messages: int().notNull(),
+  model: text().notNull()
 });
 
 export const imagesTable = sqliteTable('images', {
