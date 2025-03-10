@@ -1,7 +1,7 @@
 
 
 export const PATHS = {
-  CHAT: '/',
+  ROOT: '/',
 }
 
 export const DEFAULT_STYLES = {

@@ -1,15 +1,16 @@
 import BaseLayout from '@/app/layouts/baseLayout';
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 import { PATHS } from '../config';
 import ChatPage from '@/pages/chatPage';
 
-export const router = () => createBrowserRouter([
+export const router = () => createHashRouter([
     {
+        path: PATHS.ROOT,
         element: <BaseLayout />,
         errorElement : <div />,
         children : [
             {
-                path: PATHS.CHAT,
+                index: true,
                 element: <ChatPage />
             }
         ]
