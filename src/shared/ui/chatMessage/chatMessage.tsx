@@ -9,7 +9,7 @@ const MessageComponent = styled(Paper)(({ theme }) => ({
     ...theme.typography.body2
 }));
 
-export default function ChatMessage({ text, sender, created, images } : { text: string, sender: string, created: string, images: any[] | null | undefined }) {
+export default function ChatMessage({ text, sender, created, images } : { text: string, sender: string, created?: string, images?: any[] | null | undefined }) {
 
     return (
         <div style={{ display: 'flex', maxWidth: '100%', columnGap: 15, alignSelf: sender === 'ME' ? 'flex-start' : 'flex-end' }}>
