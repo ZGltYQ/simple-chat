@@ -24,6 +24,7 @@ type SettingsFormData = {
     api_token: string;
     context_messages: number;
     model: string;
+    system_message: string
 }
 
 type SettingsStore = {
@@ -79,7 +80,8 @@ export const settingsStore = create<SettingsStore>((set) => ({
     formData: {
         api_token: '',
         context_messages: 30,
-        model: 'gpt-4o'
+        model: 'gpt-4o',
+        system_message: ''
     },
     setFormData: (formData: SettingsFormData) => {
         set({ formData });

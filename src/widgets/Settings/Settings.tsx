@@ -9,6 +9,7 @@ import OpenAI from "openai";
 import InputOpenAiToken from "@/features/inputOpenAiToken";
 import ContextMessagesSlider from "@/features/contextMessagesSlider";
 import ListOpenAIModels from "@/features/listOpenAiModels";
+import SystemMessageField from "@/features/systemMessageField";
 import { useEffect } from "react";
 
 export default function Settings() {
@@ -65,6 +66,7 @@ export default function Settings() {
                     <InputOpenAiToken />
                     <ContextMessagesSlider/>
                     <ListOpenAIModels/>
+                    <SystemMessageField/>
                 </List>
             </Dialog>
         </>

@@ -23,7 +23,8 @@ export const settingsTable = sqliteTable('settings', {
   id: int().primaryKey(),
   api_token: text().notNull(),
   context_messages: int().notNull(),
-  model: text().notNull()
+  model: text().notNull(),
+  system_message: text().notNull()
 });
 
 export const imagesTable = sqliteTable('images', {

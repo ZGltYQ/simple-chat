@@ -9,3 +9,14 @@ export function formatDate(date: Date) {
   
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+export const formatMessage = (message: any) => ({
+    role: message.sender === 'ME' ? 'user' : 'assistant',
+    content: [
+      ...(message.images || []).map((image: any) => ({
+        type: "image_url",
+        image_url: { url: image.base64_image }
+      })),
+      { type: "text", text: message.text }
+    ]
+  });

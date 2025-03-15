@@ -43,6 +43,10 @@ const migrations = [
         name: 'settings_add_model_field',
         query: `ALTER TABLE "settings" ADD COLUMN "model" TEXT DEFAULT "gpt-4o" NOT NULL;`
     },
+    {
+        name: 'settings_add_system_message_field',
+        query: `ALTER TABLE "settings" ADD COLUMN "system_message" TEXT DEFAULT "" NOT NULL;`
+    }
 ];
 
 export default async function runMigration(db: LibSQLDatabase) {
