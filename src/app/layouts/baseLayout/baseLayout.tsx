@@ -2,6 +2,7 @@ import { useState, Suspense } from "react"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { Outlet } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
+import { CssBaseline } from "@mui/material";
 
 
 export default function BaseLayout() {
@@ -26,6 +27,7 @@ export default function BaseLayout() {
 
     return (
         <ThemeProvider theme={theme}>
+            <CssBaseline/>
             <div>
                 <Suspense fallback={<CircularProgress/>}>
                     <Outlet />
