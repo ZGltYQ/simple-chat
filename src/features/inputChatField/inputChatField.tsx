@@ -1,5 +1,5 @@
 import { useStore } from "zustand";
-import { chatStore, settingsStore, topicsStore } from "@/app/store";
+import { chatStore, settingsStore, topicsStore, snackbarStore } from "@/app/store";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile'; // Import the attach icon
@@ -15,6 +15,7 @@ export default function InputChatField(props: any) {
   const setIsProcessing = useStore(chatStore, s => s.setIsProcessing);
   const messages = useStore(chatStore, s => s.messages);
   const setMessages = useStore(chatStore, s => s.setMessages);
+  const openSnackbar = useStore(snackbarStore, s => s.openSnackbar);
 
   const contextCount = useStore(settingsStore, s => s.formData?.context_messages);
   const systemMessage = useStore(settingsStore, s => s.formData?.system_message);
@@ -135,6 +136,8 @@ export default function InputChatField(props: any) {
       setIsProcessing(false);
     } catch (error: any) {
       setIsProcessing(false);
+
+      openSnackbar({ open: true, message: error?.message });
     }
   };
 

@@ -6,9 +6,10 @@ import { settingsStore } from "@/app/store"
 import CloseSettingsButton from "@/features/closeSettingsButton";
 import SaveSettingsButton from "@/features/saveSettingsButton";
 import OpenAI from "openai";
-import InputOpenAiToken from "@/features/inputOpenAiToken";
+import InputApiToken from "@/features/inputApiToken";
+import SourceDropdown from "@/features/sourceDropdown";
 import ContextMessagesSlider from "@/features/contextMessagesSlider";
-import ListOpenAIModels from "@/features/listOpenAiModels";
+import ListOpenAIModels from "@/features/listApiModels";
 import SystemMessageField from "@/features/systemMessageField";
 import { useEffect } from "react";
 
@@ -17,17 +18,31 @@ export default function Settings() {
     const setOpen = useStore(settingsStore, (state) => state.setOpen);
     const setFormData = useStore(settingsStore, (state) => state.setFormData);
     const token = useStore(settingsStore, (state) => state.formData?.api_token);
+    const source = useStore(settingsStore, (state) => state.formData?.source);
     const setOpenaiInstance = useStore(settingsStore, state => state.setOpenaiInstance);
     const openaiInstance = useStore(settingsStore, state => state.openaiInstance);
     const models = useStore(settingsStore, state => state.models);
     const setModels = useStore(settingsStore, state => state.setModels);
 
     useEffect(() => {
-        setOpenaiInstance(new OpenAI({ 
-            dangerouslyAllowBrowser: true,
-            apiKey: token
-        }))
-    }, [ token ])
+        const sources: Record<string, () => void> = {
+            openai: () => {
+                setOpenaiInstance(new OpenAI({ 
+                    dangerouslyAllowBrowser: true,
+                    apiKey: token
+                }))
+            },
+            deepseek : () => {
+                setOpenaiInstance(new OpenAI({ 
+                    dangerouslyAllowBrowser: true,
+                    baseURL: 'https://api.deepseek.com',
+                    apiKey: token
+                }))
+            }
+        }
+        
+        sources?.[source]();
+    }, [ token, source ])
 
     useEffect(() => {
         (async () => {
@@ -63,7 +78,8 @@ export default function Settings() {
                     </Toolbar>
                 </AppBar>
                 <List sx={{ margin: 5, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <InputOpenAiToken />
+                    <SourceDropdown/>
+                    <InputApiToken />
                     <ContextMessagesSlider/>
                     <ListOpenAIModels/>
                     <SystemMessageField/>

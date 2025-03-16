@@ -21,10 +21,17 @@ type Model = {
 }
 
 type SettingsFormData = {
+    source: string;
     api_token: string;
     context_messages: number;
     model: string;
     system_message: string
+}
+
+type SnackbarStore = {
+    open: boolean;
+    message: string;
+    openSnackbar: ({ open, message }: { open: boolean; message: string }) => void
 }
 
 type SettingsStore = {
@@ -78,6 +85,7 @@ export const settingsStore = create<SettingsStore>((set) => ({
     models: [],
     setModels: (models: Model[]) => set({ models }),
     formData: {
+        source : 'openai',
         api_token: '',
         context_messages: 30,
         model: 'gpt-4o',
@@ -92,6 +100,12 @@ export const drawerStore = create<DrawerStore>((set) => ({
     open: true,
     setOpen: (open: boolean) => set({ open }),
 }));
+
+export const snackbarStore = create<SnackbarStore>((set) => ({
+    open: false,
+    message: '',
+    openSnackbar: ({ open, message }: { open: boolean; message: string }) => set({ open, message }),
+}))
 
 export const chatStore = create<ChatStore>((set) => ({
     input: '',

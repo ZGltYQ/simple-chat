@@ -1,9 +1,9 @@
 import Select from '@/shared/ui/select';
 import { useStore } from 'zustand';
 import { settingsStore } from '@/app/store';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-export default function ListOpenAIModels() {
+export default function ListApiModels() {
     const openaiInstance = useStore(settingsStore, state => state.openaiInstance);
     const model = useStore(settingsStore, state => state.formData?.model);
     const setFormData = useStore(settingsStore, state => state.setFormData);

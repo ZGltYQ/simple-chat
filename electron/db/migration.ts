@@ -46,6 +46,10 @@ const migrations = [
     {
         name: 'settings_add_system_message_field',
         query: `ALTER TABLE "settings" ADD COLUMN "system_message" TEXT DEFAULT "" NOT NULL;`
+    },
+    {
+        name : 'add_source_field',
+        query: `ALTER TABLE "settings" ADD COLUMN "source" TEXT DEFAULT "openai" NOT NULL;`
     }
 ];
 
