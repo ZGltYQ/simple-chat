@@ -79,7 +79,6 @@ export default function InputChatField(props: any) {
 
       const createdImages: any = [];
 
-      let botMessage = '';
       let lastUpdate: any = new Date();
 
       if (images?.length) {
@@ -90,13 +89,14 @@ export default function InputChatField(props: any) {
         })));
 
         const imgs = await window.ipcRenderer.invoke('getImagesByMessage', message?.id);
+
         createdImages.push(...imgs);
       }
 
       setMessages([
         ...messages,
         { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-        { text: botMessage, sender: 'AI', topic_id: selected?.id, created }
+        { text: 'Thinking...', sender: 'AI', topic_id: selected?.id, created }
       ]);
 
       const stream = await (openai.chat.completions as any).create({
@@ -106,12 +106,14 @@ export default function InputChatField(props: any) {
           ...messages.slice(-contextCount).map(formatMessage),
           formatMessage({
             sender: 'ME',
-            images,
+            images: createdImages,
             text: message?.text
           })
         ],
         stream: true
       });
+
+      let botMessage = '';
 
       for await (const chunk of stream) {
         botMessage += (chunk.choices[0]?.delta?.content || "");

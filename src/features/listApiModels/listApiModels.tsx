@@ -4,7 +4,6 @@ import { settingsStore } from '@/app/store';
 import React from 'react';
 
 export default function ListApiModels() {
-    const openaiInstance = useStore(settingsStore, state => state.openaiInstance);
     const model = useStore(settingsStore, state => state.formData?.model);
     const setFormData = useStore(settingsStore, state => state.setFormData);
     const formDate = useStore(settingsStore, state => state.formData);

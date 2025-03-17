@@ -21,7 +21,6 @@ export default function Settings() {
     const source = useStore(settingsStore, (state) => state.formData?.source);
     const setOpenaiInstance = useStore(settingsStore, state => state.setOpenaiInstance);
     const openaiInstance = useStore(settingsStore, state => state.openaiInstance);
-    const models = useStore(settingsStore, state => state.models);
     const setModels = useStore(settingsStore, state => state.setModels);
 
     useEffect(() => {
@@ -46,13 +45,13 @@ export default function Settings() {
 
     useEffect(() => {
         (async () => {
-            if (openaiInstance?.apiKey?.length && !models?.length) {
+            if (openaiInstance?.apiKey?.length) {
                 const { data } = await openaiInstance.models.list();
 
                 setModels(data.map((model: any) => ({ value: model?.id, label: model?.id })));
             }
         })();
-    }, [ openaiInstance ])
+    }, [ openaiInstance, source ]);
     
     useEffect(() => {
         (async () => {

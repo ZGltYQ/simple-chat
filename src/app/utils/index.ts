@@ -15,8 +15,8 @@ export const formatMessage = (message: any) => ({
     content: [
       ...(message.images || []).map((image: any) => ({
         type: "image_url",
-        image_url: { url: image.base64_image }
+        image_url: { url: image?.base64_image }
       })),
-      { type: "text", text: message.text }
+      ...message.text?.length ? [{ type: "text", text: message.text }] : []
     ]
   });
