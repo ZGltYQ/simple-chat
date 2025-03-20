@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { MODELS } from '../config';
 
 type Selected = {
     id: string;
@@ -85,7 +86,7 @@ export const settingsStore = create<SettingsStore>((set) => ({
     models: [],
     setModels: (models: Model[]) => set({ models }),
     formData: {
-        source : 'openai',
+        source : MODELS.OPENAI,
         api_token: '',
         context_messages: 30,
         model: 'gpt-4o',

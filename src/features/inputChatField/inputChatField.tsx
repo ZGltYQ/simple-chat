@@ -22,6 +22,7 @@ export default function InputChatField(props: any) {
   const model = useStore(settingsStore, s => s.formData?.model);
   const selected = useStore(topicsStore, s => s.selected);
   const openai = useStore(settingsStore, state => state.openaiInstance);
+  const source = useStore(settingsStore, state => state.formData?.source);
 
   const handleAttachImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -103,12 +104,12 @@ export default function InputChatField(props: any) {
         model,
         messages: [
           ...(systemMessage?.length ? [{ role: "system", content: systemMessage }] : []),
-          ...messages.slice(-contextCount).map(formatMessage),
+          ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
           formatMessage({
             sender: 'ME',
             images: createdImages,
             text: message?.text
-          })
+          }, source)
         ],
         stream: true
       });

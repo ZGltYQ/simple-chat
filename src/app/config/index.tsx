@@ -8,7 +8,12 @@ export const DEFAULT_STYLES = {
     DRAWER_WIDTH: 220
 }
 
+export const MODELS = {
+  OPENAI: 'openai',
+  DEEPSEEK: 'deepseek'
+}
+
 export const DEFAULT_SOURCES = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'deepseek', label: 'DeepSeek' }
+  { value: MODELS.OPENAI, label: 'OpenAI' },
+  { value: MODELS.DEEPSEEK, label: 'DeepSeek' }
 ]
