@@ -9,8 +9,13 @@ import OpenAI from "openai";
 import InputApiToken from "@/features/inputApiToken";
 import SourceDropdown from "@/features/sourceDropdown";
 import ContextMessagesSlider from "@/features/contextMessagesSlider";
-import ListOpenAIModels from "@/features/listApiModels";
+import ListApiModels from "@/features/listApiModels";
+import UploadLocalModel   from "@/features/uploadLocalModel";
 import SystemMessageField from "@/features/systemMessageField";
+import GPULayersSlider from "@/features/gpuLayersSlider";
+import ContextSizeSlider from "@/features/contextSizeSlider";
+import BatchSizeSlider from "@/features/batchSizeSlider";
+import ThreadsSlider from "@/features/threadsSlider";
 import { useEffect } from "react";
 
 export default function Settings() {
@@ -40,7 +45,7 @@ export default function Settings() {
             }
         }
         
-        sources?.[source]();
+        sources?.[source]?.();
     }, [ token, source ])
 
     useEffect(() => {
@@ -51,7 +56,7 @@ export default function Settings() {
                 setModels(data.map((model: any) => ({ value: model?.id, label: model?.id })));
             }
         })();
-    }, [ openaiInstance, source ]);
+    }, [ openaiInstance ]);
     
     useEffect(() => {
         (async () => {
@@ -59,7 +64,47 @@ export default function Settings() {
         
             if (settings) setFormData(settings);
         })()
-    }, [ open ])
+    }, [ source ])
+
+    const renderSourceFields = (source: string) => {
+        switch (source) {
+            case 'openai':
+                return (
+                    <>
+                        <SourceDropdown/>
+                        <InputApiToken />
+                        <ContextMessagesSlider/>
+                        <ListApiModels/>
+                        <SystemMessageField/>
+                    </>
+                )
+            case 'deepseek':
+                return (
+                    <>
+                        <SourceDropdown/>
+                        <InputApiToken />
+                        <ContextMessagesSlider/>
+                        <ListApiModels/>
+                        <SystemMessageField/>
+                    </>
+                )
+            case 'local':
+                return (
+                    <>
+                        <SourceDropdown/>
+                        <UploadLocalModel/>
+                        <ContextMessagesSlider/>
+                        <SystemMessageField/>
+                        <GPULayersSlider/>
+                        <ContextSizeSlider/>
+                        <BatchSizeSlider/>
+                        <ThreadsSlider/>
+                    </>
+                )
+            default:
+                return null
+        }
+    }
 
     return (
         <>
@@ -77,11 +122,7 @@ export default function Settings() {
                     </Toolbar>
                 </AppBar>
                 <List sx={{ margin: 5, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <SourceDropdown/>
-                    <InputApiToken />
-                    <ContextMessagesSlider/>
-                    <ListOpenAIModels/>
-                    <SystemMessageField/>
+                    {renderSourceFields(source)}
                 </List>
             </Dialog>
         </>

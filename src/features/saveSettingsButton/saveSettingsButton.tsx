@@ -1,6 +1,7 @@
 import { Button } from "@mui/material";
 import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
+import { useEffect } from "react";
 
 
 export default function SaveSettingsButton() {
@@ -8,6 +9,7 @@ export default function SaveSettingsButton() {
     const formData = useStore(settingsStore, (state) => state.formData);
 
     const handleSave = async () => {
+        if (formData?.source === 'local') await window.ipcRenderer.invoke('initLocalModel', formData);
         await window.ipcRenderer.invoke('createSettings', formData);
         setOpen(false);
     }

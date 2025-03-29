@@ -10,13 +10,33 @@ export function formatDate(date: Date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-export const formatMessage = (message: any, source: string = MODELS.OPENAI) => ({
-    role: message.sender === 'ME' ? 'user' : 'assistant',
-    content: source === MODELS.OPENAI ? [
-      ...(message.images || []).map((image: any) => ({
-        type: "image_url",
-        image_url: { url: image?.base64_image }
-      })),
-      ...message.text?.length ? [{ type: "text", text: message.text }] : []
-    ] : message.text 
-  });
+export const formatMessage = (message: any, source: string = MODELS.OPENAI) => {
+  switch (source) {
+    case MODELS.OPENAI:
+      return {
+        role: message.sender === 'ME' ? 'user' : 'assistant',
+        content: [
+          ...(message.images || []).map((image: any) => ({
+            type: "image_url",
+            image_url: { url: image?.base64_image }
+          })),
+          ...message.text?.length ? [{ type: "text", text: message.text }] : []
+        ]
+    };
+    case MODELS.DEEPSEEK:
+      return {
+        role: message.sender === 'ME' ? 'user' : 'assistant',
+        content: message.text
+      };
+    case MODELS.LOCAL:
+      return {
+        type: message.sender === 'ME' ? 'user' : 'model',
+        ...message.sender === 'ME' ? { text: message.text } : { response : [ message.text ] }
+      };
+    default:
+      return {
+        role: message.sender === 'ME' ? 'user' : 'assistant',
+        content: message.text
+      };
+  }
+};

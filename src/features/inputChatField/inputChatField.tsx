@@ -3,8 +3,9 @@ import { chatStore, settingsStore, topicsStore, snackbarStore } from "@/app/stor
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile'; // Import the attach icon
-import { ChangeEvent, startTransition } from "react";
+import { ChangeEvent, startTransition, useEffect } from "react";
 import { formatDate, formatMessage } from "@/app/utils";
+import { MODELS } from "@/app/config";
 
 export default function InputChatField(props: any) {
   const input = useStore(chatStore, s => s.input);
@@ -16,6 +17,7 @@ export default function InputChatField(props: any) {
   const messages = useStore(chatStore, s => s.messages);
   const setMessages = useStore(chatStore, s => s.setMessages);
   const openSnackbar = useStore(snackbarStore, s => s.openSnackbar);
+  const setStreamedMessage = useStore(chatStore, s => s.setStreamedMessage);
 
   const contextCount = useStore(settingsStore, s => s.formData?.context_messages);
   const systemMessage = useStore(settingsStore, s => s.formData?.system_message);
@@ -76,7 +78,12 @@ export default function InputChatField(props: any) {
 
       const created = formatDate(new Date());
 
-      const message = await window.ipcRenderer.invoke('createMessage', { text: input || '', sender: 'ME', topic_id: selected?.id, created });
+      const message = await window.ipcRenderer.invoke('createMessage', { 
+        text: input || '', 
+        sender: 'ME', 
+        topic_id: selected?.id, 
+        created 
+      });
 
       const createdImages: any = [];
 
@@ -96,9 +103,49 @@ export default function InputChatField(props: any) {
 
       setMessages([
         ...messages,
-        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-        { text: 'Thinking...', sender: 'AI', topic_id: selected?.id, created }
+        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created }
       ]);
+
+      // setStreamedMessage({ text: 'Thinking...', sender: 'AI', topic_id: selected?.id, created });
+
+      if (source === MODELS.LOCAL) {
+        const chunkProcessor = (_: any, {chunk, complied}: any) => {
+          if (new Date() as any - lastUpdate > 500 || complied) {
+            startTransition(() => {
+              setStreamedMessage({ text: chunk, sender: 'AI', topic_id: selected?.id, created });
+            });
+  
+            lastUpdate = new Date();
+          }
+        }
+
+        window.ipcRenderer.on('llm-chunk', chunkProcessor);
+
+        await window.ipcRenderer.invoke('localCompletion', {
+          messages: [
+            ...(systemMessage?.length ? [{ type: "system", text: systemMessage }] : []),
+            ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
+            formatMessage({
+              sender: 'ME',
+              images: createdImages,
+              text: message?.text
+            }, source)
+          ]
+        });
+
+        window.ipcRenderer.off('llm-chunk', chunkProcessor);
+
+        const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
+
+        setStreamedMessage(null);
+        setMessages([
+          ...messages,
+          { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
+          { text: createdBotMessage?.text, images: createdImages, sender: 'AI', topic_id: selected?.id, created }
+        ]);
+
+        return setIsProcessing(false);
+      }
 
       const stream = await (openai.chat.completions as any).create({
         model,
@@ -114,27 +161,24 @@ export default function InputChatField(props: any) {
         stream: true
       });
 
-      let botMessage = '';
-
       for await (const chunk of stream) {
-        botMessage += (chunk.choices[0]?.delta?.content || "");
-
         if (new Date() as any - lastUpdate > 500 || chunk.choices[0]?.finish_reason) {
-          const updatedMessages = [
-            ...messages,
-            { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-            { text: botMessage, sender: 'AI', topic_id: selected?.id, created }
-          ];
-
           startTransition(() => {
-            setMessages(updatedMessages);
+            setStreamedMessage({ text: (chunk.choices[0]?.delta?.content || ""), sender: 'AI', topic_id: selected?.id, created });
           });
 
           lastUpdate = new Date();
         }
       }
 
-      await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
+      const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
+
+      setStreamedMessage(null);
+      setMessages([
+        ...messages,
+        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
+        { text: createdBotMessage?.text, images: createdImages, sender: 'AI', topic_id: selected?.id, created }
+      ]);
 
       setIsProcessing(false);
     } catch (error: any) {

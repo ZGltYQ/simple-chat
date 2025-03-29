@@ -3,53 +3,57 @@ import { migrationsTable } from "./schema";
 
 const migrations = [
     {
-        name: 'create_messages',
-        query : `CREATE TABLE "messages" (
-        "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "text" text NOT NULL,
-        "sender" text NOT NULL,
-        "topic_id" integer NOT NULL,
-        "created" DATETIME,
-        FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
-        );`
-    },
-    {
         name: 'create_topics',
-        query : `CREATE TABLE "topics" (
-        "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "title" text NOT NULL
+        query: `CREATE TABLE topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            title TEXT NOT NULL
         );`
     },
     {
-        name: 'settings',
-        query: `CREATE TABLE "settings" (
-        "id" integer PRIMARY KEY NOT NULL,
-        "api_token" text NOT NULL,
-        "context_messages" INTEGER DEFAULT 30 NOT NULL
+        name: 'create_messages',
+        query: `CREATE TABLE messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            text TEXT NOT NULL,
+            sender TEXT NOT NULL,
+            topic_id INTEGER NOT NULL,
+            created DATETIME,
+            FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+        );`
+    },
+    {
+        name: 'create_settings',
+        query: `CREATE TABLE settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            source TEXT NOT NULL,
+            selected INTEGER DEFAULT 0 NOT NULL,
+            api_token TEXT,
+            model TEXT NOT NULL,
+            system_message TEXT,
+            gpu_layers INTEGER DEFAULT 35 NOT NULL,
+            context_size INTEGER DEFAULT 8192 NOT NULL,
+            batch_size INTEGER DEFAULT 512 NOT NULL,
+            threads INTEGER DEFAULT 6 NOT NULL,
+            context_messages INTEGER DEFAULT 30 NOT NULL
         );`
     },
     {
         name: 'create_images',
-        query: `CREATE TABLE "images" (
-        "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-        "base64_image" text NOT NULL,
-        "message_id" integer NOT NULL,
-        "topic_id" integer NOT NULL,
-        FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
-        FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+        query: `CREATE TABLE images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            base64_image TEXT NOT NULL,
+            message_id INTEGER NOT NULL,
+            topic_id INTEGER NOT NULL,
+            FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+            FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
         );`
     },
     {
-        name: 'settings_add_model_field',
-        query: `ALTER TABLE "settings" ADD COLUMN "model" TEXT DEFAULT "gpt-4o" NOT NULL;`
-    },
-    {
-        name: 'settings_add_system_message_field',
-        query: `ALTER TABLE "settings" ADD COLUMN "system_message" TEXT DEFAULT "" NOT NULL;`
-    },
-    {
-        name : 'add_source_field',
-        query: `ALTER TABLE "settings" ADD COLUMN "source" TEXT DEFAULT "openai" NOT NULL;`
+        name: 'insert_default_sources',
+        query: `INSERT INTO settings (id, source, selected, api_token, model, system_message, context_messages) 
+            VALUES 
+            (1, 'openai', 1, '', 'gpt-4o', '', 30),
+            (2, 'deepseek', 0, '', 'deepseek-chat', '', 30),
+            (3, 'local', 0, '', '', '', 30)`
     }
 ];
 

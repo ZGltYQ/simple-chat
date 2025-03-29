@@ -10,10 +10,12 @@ export const DEFAULT_STYLES = {
 
 export const MODELS = {
   OPENAI: 'openai',
-  DEEPSEEK: 'deepseek'
+  DEEPSEEK: 'deepseek',
+  LOCAL: 'local'
 }
 
 export const DEFAULT_SOURCES = [
   { value: MODELS.OPENAI, label: 'OpenAI' },
-  { value: MODELS.DEEPSEEK, label: 'DeepSeek' }
+  { value: MODELS.DEEPSEEK, label: 'DeepSeek' },
+  { value: MODELS.LOCAL, label: 'Local' }
 ]

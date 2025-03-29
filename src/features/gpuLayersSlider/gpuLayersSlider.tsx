@@ -2,21 +2,21 @@ import { Slider, Typography } from "@mui/material";
 import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
 
-export default function ContextMessagesSlider() {
-    const context_messages = useStore(settingsStore, state => state.formData.context_messages);
+export default function GPULayersSlider() {
+    const gpu_layers = useStore(settingsStore, state => state.formData.gpu_layers);
     const setFormData = useStore(settingsStore, state => state.setFormData);
 
     const handleSliderChange = (_: Event, value: number | number[]) => {
         if (typeof value === 'number') {
-          setFormData({ context_messages: value });
+            setFormData({ gpu_layers: value });
         }
     }
 
     return (
         <div>
-            <Typography gutterBottom>Amount of messages chat must remember</Typography>
+            <Typography gutterBottom>Amount of GPU layers</Typography>
             <Slider
-                value={context_messages as number}
+                value={gpu_layers as number}
                 valueLabelDisplay="on"
                 onChange={handleSliderChange}
                 marks

@@ -2,22 +2,25 @@ import { Slider, Typography } from "@mui/material";
 import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
 
-export default function ContextMessagesSlider() {
-    const context_messages = useStore(settingsStore, state => state.formData.context_messages);
+export default function batchSizeSlider() {
+    const batch_size = useStore(settingsStore, state => state.formData.batch_size);
     const setFormData = useStore(settingsStore, state => state.setFormData);
+
 
     const handleSliderChange = (_: Event, value: number | number[]) => {
         if (typeof value === 'number') {
-          setFormData({ context_messages: value });
+          setFormData({ batch_size: value });
         }
     }
 
     return (
         <div>
-            <Typography gutterBottom>Amount of messages chat must remember</Typography>
+            <Typography gutterBottom>Batch size</Typography>
             <Slider
-                value={context_messages as number}
+                value={batch_size as number}
                 valueLabelDisplay="on"
+                step={64}
+                max={1024}
                 onChange={handleSliderChange}
                 marks
             />

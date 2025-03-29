@@ -25,6 +25,11 @@ export const settingsTable = sqliteTable('settings', {
   api_token: text().notNull(),
   context_messages: int().notNull(),
   model: text().notNull(),
+  gpu_layers: int().notNull(),
+  context_size: int().notNull(),
+  batch_size: int().notNull(),
+  threads : int().notNull(),
+  selected: int().notNull(),
   system_message: text().notNull()
 });
 
