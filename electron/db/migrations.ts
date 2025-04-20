@@ -1,5 +1,5 @@
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { migrationsTable } from "./schema";
+import { migrationsTable } from "./schemas";
 
 const migrations = [
     {

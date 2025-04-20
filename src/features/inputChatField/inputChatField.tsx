@@ -2,10 +2,10 @@ import { useStore } from "zustand";
 import { chatStore, settingsStore, topicsStore, snackbarStore } from "@/app/store";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
-import AttachFileIcon from '@mui/icons-material/AttachFile'; // Import the attach icon
-import { ChangeEvent, startTransition, useEffect } from "react";
-import { formatDate, formatMessage } from "@/app/utils";
-import { MODELS } from "@/app/config";
+import StopIcon from '@mui/icons-material/Stop';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { ChangeEvent } from "react";
+import { formatDate, formatMessage, formatSystemMessage } from "@/app/utils";
 
 export default function InputChatField(props: any) {
   const input = useStore(chatStore, s => s.input);
@@ -17,13 +17,11 @@ export default function InputChatField(props: any) {
   const messages = useStore(chatStore, s => s.messages);
   const setMessages = useStore(chatStore, s => s.setMessages);
   const openSnackbar = useStore(snackbarStore, s => s.openSnackbar);
-  const setStreamedMessage = useStore(chatStore, s => s.setStreamedMessage);
 
   const contextCount = useStore(settingsStore, s => s.formData?.context_messages);
   const systemMessage = useStore(settingsStore, s => s.formData?.system_message);
   const model = useStore(settingsStore, s => s.formData?.model);
   const selected = useStore(topicsStore, s => s.selected);
-  const openai = useStore(settingsStore, state => state.openaiInstance);
   const source = useStore(settingsStore, state => state.formData?.source);
 
   const handleAttachImage = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,8 +85,6 @@ export default function InputChatField(props: any) {
 
       const createdImages: any = [];
 
-      let lastUpdate: any = new Date();
-
       if (images?.length) {
         await window.ipcRenderer.invoke('createImage', images.map(image => ({
           base64_image: image,
@@ -103,90 +99,41 @@ export default function InputChatField(props: any) {
 
       setMessages([
         ...messages,
-        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created }
+        { ...message, images: createdImages }
       ]);
 
-      // setStreamedMessage({ text: 'Thinking...', sender: 'AI', topic_id: selected?.id, created });
-
-      if (source === MODELS.LOCAL) {
-        const chunkProcessor = (_: any, {chunk, complied}: any) => {
-          if (new Date() as any - lastUpdate > 500 || complied) {
-            startTransition(() => {
-              setStreamedMessage({ text: chunk, sender: 'AI', topic_id: selected?.id, created });
-            });
-  
-            lastUpdate = new Date();
-          }
-        }
-
-        window.ipcRenderer.on('llm-chunk', chunkProcessor);
-
-        await window.ipcRenderer.invoke('localCompletion', {
-          messages: [
-            ...(systemMessage?.length ? [{ type: "system", text: systemMessage }] : []),
-            ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
-            formatMessage({
-              sender: 'ME',
-              images: createdImages,
-              text: message?.text
-            }, source)
-          ]
-        });
-
-        window.ipcRenderer.off('llm-chunk', chunkProcessor);
-
-        const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
-
-        setStreamedMessage(null);
-        setMessages([
-          ...messages,
-          { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-          { text: createdBotMessage?.text, images: createdImages, sender: 'AI', topic_id: selected?.id, created }
-        ]);
-
-        return setIsProcessing(false);
-      }
-
-      const stream = await (openai.chat.completions as any).create({
+      const botResponse = await window.ipcRenderer.invoke('startCompletion', {
         model,
-        messages: [
-          ...(systemMessage?.length ? [{ role: "system", content: systemMessage }] : []),
+        messages : [
+          ...formatSystemMessage(systemMessage, source),
           ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
           formatMessage({
             sender: 'ME',
             images: createdImages,
             text: message?.text
           }, source)
-        ],
-        stream: true
-      });
+        ]
+      })
 
-      for await (const chunk of stream) {
-        if (new Date() as any - lastUpdate > 500 || chunk.choices[0]?.finish_reason) {
-          startTransition(() => {
-            setStreamedMessage({ text: (chunk.choices[0]?.delta?.content || ""), sender: 'AI', topic_id: selected?.id, created });
-          });
+      const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botResponse, sender: 'AI', topic_id: selected?.id, created });
 
-          lastUpdate = new Date();
-        }
-      }
-
-      const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
-
-      setStreamedMessage(null);
       setMessages([
         ...messages,
-        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-        { text: createdBotMessage?.text, images: createdImages, sender: 'AI', topic_id: selected?.id, created }
+        { ...message, images: createdImages },
+        { text: createdBotMessage?.text, sender: 'AI', topic_id: selected?.id, created }
       ]);
 
-      setIsProcessing(false);
+      return setIsProcessing(false);
     } catch (error: any) {
       setIsProcessing(false);
 
       openSnackbar({ open: true, message: error?.message });
     }
   };
+
+  const handleStopStreaming = async () => {
+    await window.ipcRenderer.invoke('stopCompletion');
+  } 
 
   return (
     <TextField
@@ -220,13 +167,23 @@ export default function InputChatField(props: any) {
                 />
                 <AttachFileIcon />
               </IconButton>
-              <IconButton
-                aria-label="Send message"
-                onClick={handleSubmit}
-                edge="end"
-              >
-                <SendIcon />
-              </IconButton>
+              {isProcessing ? (
+                <IconButton
+                  aria-label="Stop"
+                  onClick={handleStopStreaming}
+                  edge="end"
+                >
+                  <StopIcon />
+                </IconButton>
+              ) : (
+                <IconButton
+                  aria-label="Send message"
+                  onClick={handleSubmit}
+                  edge="end"
+                >
+                  <SendIcon />
+                </IconButton>
+              )}
             </InputAdornment>
           )
         },

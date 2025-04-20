@@ -1,21 +1,34 @@
 import { Button } from "@mui/material";
 import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
-import { useEffect } from "react";
+import { useState } from "react";
 
 
 export default function SaveSettingsButton() {
     const setOpen = useStore(settingsStore, (state) => state.setOpen);
     const formData = useStore(settingsStore, (state) => state.formData);
 
+    const [ loading, setLoading ] = useState(false);
+
     const handleSave = async () => {
-        if (formData?.source === 'local') await window.ipcRenderer.invoke('initLocalModel', formData);
-        await window.ipcRenderer.invoke('createSettings', formData);
-        setOpen(false);
+        try {
+            setLoading(true);
+            await window.ipcRenderer.invoke('createSettings', formData);
+        
+            setLoading(false);
+            setOpen(false);
+        } catch (error) {
+            setLoading(false);
+        }
     }
 
     return (
-        <Button autoFocus color="inherit" onClick={handleSave}>
+        <Button
+            loading={loading}
+            autoFocus 
+            color="inherit" 
+            onClick={handleSave}
+        >
             Save
         </Button>
     )

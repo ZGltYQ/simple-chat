@@ -48,7 +48,7 @@ export default function ChatMessage({ text, sender, created, images } : { text: 
                 >
                     {text}
                 </ReactMarkdown>
-                <div style={{ fontSize: 10, alignSelf: sender === 'ME' ? 'flex-start' : 'flex-end' }}>{created}</div>
+                {created?.length && <div style={{ fontSize: 10, alignSelf: sender === 'ME' ? 'flex-start' : 'flex-end' }}>{created}</div>}
             </MessageComponent>
             {sender !== 'ME' && <Avatar>{sender}</Avatar>}
         </div>

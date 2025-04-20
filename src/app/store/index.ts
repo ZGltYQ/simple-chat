@@ -42,11 +42,7 @@ type SnackbarStore = {
 type SettingsStore = {
     open: boolean;
     setOpen: (open: boolean) => void;
-    openaiInstance: any;
-    setOpenaiInstance: (openaiInstance: any) => void;
     formData: SettingsFormData;
-    models: Model[];
-    setModels: (models: Model[]) => void;
     setFormData: (updates: Partial<SettingsFormData>) => void;
 }
 
@@ -55,8 +51,6 @@ type ChatStore = {
     messages: any[];
     images: string[];
     isProcessing: boolean;
-    streamedMessage: any;
-    setStreamedMessage: (streamedMessage: any) => void;
     setIsProcessing: (isProcessing: boolean) => void;
     setMessages: (messages: any[]) => void;
     setInput: (input: string) => void;
@@ -86,11 +80,7 @@ export const topicsStore = create<TopicsStore>((set) => ({
 
 export const settingsStore = create<SettingsStore>((set) => ({
     open: false,
-    openaiInstance: null,
-    setOpenaiInstance: (openaiInstance: any) => set({ openaiInstance }),
     setOpen: (open: boolean) => set({ open }),
-    models: [],
-    setModels: (models: Model[]) => set({ models }),
     formData: {
         source : MODELS.OPENAI,
         api_token: '',
@@ -127,14 +117,6 @@ export const chatStore = create<ChatStore>((set) => ({
     input: '',
     messages: [],
     images : [],
-    streamedMessage: '',
-    setStreamedMessage: (streamedMessage: any) => set((state) => ({ 
-        streamedMessage: {
-            ...state.streamedMessage,
-            ...streamedMessage,
-            text: state.streamedMessage.text + streamedMessage.text
-        }
-    })),
     isProcessing: false,
     setIsProcessing: (isProcessing: boolean) => set({ isProcessing }),
     setMessages: (messages: any) => set({ messages }),

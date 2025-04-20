@@ -40,3 +40,30 @@ export const formatMessage = (message: any, source: string = MODELS.OPENAI) => {
       };
   }
 };
+
+export const formatSystemMessage = (message: string, source: string = MODELS.OPENAI) => {
+  if (!message?.length) return [];
+
+  switch (source) {
+    case MODELS.OPENAI:
+      return [{
+        role: 'system',
+        content: message
+      }];
+    case MODELS.DEEPSEEK:
+      return [{
+        role: 'system',
+        content: message
+      }];
+    case MODELS.LOCAL:
+      return [{
+        type: 'system',
+        content: message
+      }];
+    default:
+      return [{
+        role: 'system', 
+        content: message
+      }];
+  }
+};
