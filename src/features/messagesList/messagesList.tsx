@@ -5,7 +5,7 @@ import { chatStore, topicsStore } from "@/app/store";
 import { useEffect } from "react";
 
 
-export default function MessagesList() {
+export default function MessagesList({children}: {children?: React.ReactNode}) {
     const messages = useStore(chatStore, state => state.messages);
     const setMessages = useStore(chatStore, state => state.setMessages);
     const selected = useStore(topicsStore, state => state.selected);
@@ -23,6 +23,7 @@ export default function MessagesList() {
             {messages.map((message, index) => (
                 <ChatMessage key={message.id || index} {...message}/>
             ))}
+            {children}
         </AutoScrollWrapper>
     )
 }

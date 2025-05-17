@@ -4,14 +4,16 @@ import { useStore } from 'zustand';
 import { settingsStore } from '@/app/store';
 
 export default function SourceDropdown() {
-    const formData = useStore(settingsStore, state => state.formData);
+    const source = useStore(settingsStore, state => state.formData.source);
     const setFormData = useStore(settingsStore, state => state.setFormData);
 
-    function handleChange(event: React.ChangeEvent<{ value: string }>) {
-        setFormData({ ...formData, source: event.target.value })
+    async function handleChange(event: React.ChangeEvent<{ value: string }>) {
+        await window.ipcRenderer.invoke('updateSettingsSource', event.target.value);
+
+        setFormData({ source: event.target.value })
     }
 
     return (
-        <Select label={'Source'} options={DEFAULT_SOURCES} value={formData.source} onChange={handleChange} />
+        <Select label={'Source'} options={DEFAULT_SOURCES} value={source} onChange={handleChange} />
     )
 }

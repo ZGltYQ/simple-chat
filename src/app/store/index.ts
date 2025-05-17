@@ -16,9 +16,13 @@ type DrawerStore = {
     setOpen: (open: boolean) => void;
 }
 
-type Model = {
-    label: string;
-    value: string;
+export type FunctionData = {
+    name: string;
+    description: string;
+    params: string;
+    active: boolean;
+    handler: string;
+    id?: string | number;
 }
 
 type SettingsFormData = {
@@ -26,7 +30,11 @@ type SettingsFormData = {
     api_token: string;
     context_messages: number;
     model: string;
-    system_message: string
+    gpu_layers: number;
+    context_size: number;
+    batch_size: number;
+    threads: number;
+    system_message: string;
 }
 
 type SnackbarStore = {
@@ -38,12 +46,8 @@ type SnackbarStore = {
 type SettingsStore = {
     open: boolean;
     setOpen: (open: boolean) => void;
-    openaiInstance: any;
-    setOpenaiInstance: (openaiInstance: any) => void;
     formData: SettingsFormData;
-    models: Model[];
-    setModels: (models: Model[]) => void;
-    setFormData: (formData: SettingsFormData) => void;
+    setFormData: (updates: Partial<SettingsFormData>) => void;
 }
 
 type ChatStore = {
@@ -57,6 +61,14 @@ type ChatStore = {
     setImages: (images: string[]) => void;
 }
 
+type Functions = {
+    formData: FunctionData;
+    list: FunctionData[];
+    setList: (list: FunctionData[]) => void
+    setFormData: (data: Partial<FunctionData>) => void
+    resetFormData: () => void
+}
+
 export type TopicsStore = {
     topics: Topic[];
     editingTopic: string | null;
@@ -65,6 +77,27 @@ export type TopicsStore = {
     setEditingTopic: (editingId: string | null) => void;
     setTopics: (topics: Topic[]) => void;
 };
+
+export const functionsStore = create<Functions>((set, get) => ({
+    formData : {
+        name: '',
+        description: '',
+        active: false,
+        params: '',
+        handler: '',
+    },
+    list : [],
+    setList: (list: FunctionData[]) => set({ list }),
+    resetFormData: () => set({ formData: { name: '', active: false, description: '', params: '', handler: '' } }),
+    setFormData: (data: Partial<Functions>) => {
+        set((state) => ({
+            formData: {
+                ...state.formData,
+                ...data
+            }
+        }));
+    }
+}))
 
 export const topicsStore = create<TopicsStore>((set) => ({
     topics: [],
@@ -80,20 +113,25 @@ export const topicsStore = create<TopicsStore>((set) => ({
 
 export const settingsStore = create<SettingsStore>((set) => ({
     open: false,
-    openaiInstance: null,
-    setOpenaiInstance: (openaiInstance: any) => set({ openaiInstance }),
     setOpen: (open: boolean) => set({ open }),
-    models: [],
-    setModels: (models: Model[]) => set({ models }),
     formData: {
         source : MODELS.OPENAI,
         api_token: '',
         context_messages: 30,
+        gpu_layers: 35,
+        context_size: 8192,
+        batch_size: 512,
+        threads: 6,
         model: 'gpt-4o',
         system_message: ''
     },
-    setFormData: (formData: SettingsFormData) => {
-        set({ formData });
+    setFormData: (updates: Partial<SettingsFormData>) => {
+        set((state) => ({
+            formData: {
+                ...state.formData,
+                ...updates
+            }
+        }));
     }
 }));
 

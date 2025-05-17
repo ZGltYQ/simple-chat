@@ -3,7 +3,7 @@ import { TextField } from "@mui/material";
 import { useStore } from "zustand";
 
 export default function SystemMessageField() {
-    const formData = useStore(settingsStore, state => state.formData);
+    const system_message = useStore(settingsStore, state => state.formData.system_message);
     const setFormData = useStore(settingsStore, state => state.setFormData);
 
     return (
@@ -11,8 +11,8 @@ export default function SystemMessageField() {
           fullWidth
           id="system-message"
           label="System message"
-          onChange={({ target }) => setFormData({ ...formData, system_message: target?.value })}
-          value={formData?.system_message}
+          onChange={({ target }) => setFormData({ system_message: target?.value })}
+          value={system_message}
           multiline
           rows={6}
         />

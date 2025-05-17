@@ -1,11 +1,10 @@
 import { useStore } from "zustand"
 import { topicsStore, drawerStore } from "@/app/store"
-import { IconButton, InputAdornment} from "@mui/material";
-import SendIcon from '@mui/icons-material/Send';
 import InputChatField from "@/features/inputChatField";
 import ChatWrapper from "@/shared/ui/chatWrapper"
 import MessagesList from "@/features/messagesList";
 import ImagesBlock from "@/features/imagesBlock";
+import StreamedMessage from "@/features/streamedMessage";
 
 
 export default function Chat() {
@@ -15,7 +14,9 @@ export default function Chat() {
 
     return selected?.id ? (
       <ChatWrapper open={open}>
-          <MessagesList/>
+          <MessagesList>
+            <StreamedMessage/>
+          </MessagesList>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
             <ImagesBlock/>
             <InputChatField />

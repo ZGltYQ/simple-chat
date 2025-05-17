@@ -14,8 +14,8 @@ export default function EditTopicButton({ id } : { id: string }) {
     }
 
     return (
-        <IconButton size="small" onClick={handleEditTopic}>
-            <EditIcon fontSize='small' />
+        <IconButton sx={{ width: 30, height: 30 }} onClick={handleEditTopic}>
+            <EditIcon sx={{ width: 20, height: 20 }}  fontSize='small' />
         </IconButton>
     )
 }

@@ -25,12 +25,27 @@ export const settingsTable = sqliteTable('settings', {
   api_token: text().notNull(),
   context_messages: int().notNull(),
   model: text().notNull(),
+  gpu_layers: int().notNull(),
+  context_size: int().notNull(),
+  batch_size: int().notNull(),
+  threads : int().notNull(),
+  selected: int().notNull(),
   system_message: text().notNull()
 });
+
+export const functionsTable = sqliteTable('functions', {
+  id: int().primaryKey({ autoIncrement: true }),
+  name: text().notNull(),
+  description: text().notNull(),
+  active : int().notNull(),
+  params: text().notNull(),
+  handler: text().notNull()
+})
 
 export const imagesTable = sqliteTable('images', {
   id: int().primaryKey({ autoIncrement: true }),
   base64_image: text().notNull(),
+  description: text(),
   message_id: int().notNull().references(() => messagesTable.id, { onDelete: 'cascade' }),
   topic_id: int().notNull().references(() => topicsTable.id, { onDelete: 'cascade' })
 });

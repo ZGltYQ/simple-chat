@@ -3,7 +3,7 @@ import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
 
 export default function InputApiToken() {
-    const formData = useStore(settingsStore, state => state.formData);
+    const api_token = useStore(settingsStore, state => state.formData.api_token);
     const setFormData = useStore(settingsStore, state => state.setFormData);
 
     return (
@@ -11,8 +11,8 @@ export default function InputApiToken() {
             fullWidth 
             id="outlined-basic" 
             label="API Token"
-            onChange={({ target }) => setFormData({ ...formData, api_token: target?.value })}
-            value={formData?.api_token}
+            onChange={({ target }) => setFormData({ api_token: target?.value })}
+            value={api_token}
             variant="outlined"
         />
     )

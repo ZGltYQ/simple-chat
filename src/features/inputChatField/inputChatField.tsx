@@ -1,10 +1,11 @@
 import { useStore } from "zustand";
-import { chatStore, settingsStore, topicsStore, snackbarStore } from "@/app/store";
+import { chatStore, settingsStore, topicsStore, snackbarStore, functionsStore } from "@/app/store";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
-import AttachFileIcon from '@mui/icons-material/AttachFile'; // Import the attach icon
-import { ChangeEvent, startTransition } from "react";
-import { formatDate, formatMessage } from "@/app/utils";
+import StopIcon from '@mui/icons-material/Stop';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { ChangeEvent } from "react";
+import { formatDate, formatMessage, formatSystemMessage } from "@/app/utils";
 
 export default function InputChatField(props: any) {
   const input = useStore(chatStore, s => s.input);
@@ -21,8 +22,8 @@ export default function InputChatField(props: any) {
   const systemMessage = useStore(settingsStore, s => s.formData?.system_message);
   const model = useStore(settingsStore, s => s.formData?.model);
   const selected = useStore(topicsStore, s => s.selected);
-  const openai = useStore(settingsStore, state => state.openaiInstance);
   const source = useStore(settingsStore, state => state.formData?.source);
+  const functions = useStore(functionsStore, state => state.list);
 
   const handleAttachImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -76,11 +77,14 @@ export default function InputChatField(props: any) {
 
       const created = formatDate(new Date());
 
-      const message = await window.ipcRenderer.invoke('createMessage', { text: input || '', sender: 'ME', topic_id: selected?.id, created });
+      const message = await window.ipcRenderer.invoke('createMessage', { 
+        text: input || '', 
+        sender: 'ME', 
+        topic_id: selected?.id, 
+        created 
+      });
 
       const createdImages: any = [];
-
-      let lastUpdate: any = new Date();
 
       if (images?.length) {
         await window.ipcRenderer.invoke('createImage', images.map(image => ({
@@ -96,53 +100,42 @@ export default function InputChatField(props: any) {
 
       setMessages([
         ...messages,
-        { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-        { text: 'Thinking...', sender: 'AI', topic_id: selected?.id, created }
+        { ...message, images: createdImages }
       ]);
 
-      const stream = await (openai.chat.completions as any).create({
+      const botResponse = await window.ipcRenderer.invoke('startCompletion', {
         model,
-        messages: [
-          ...(systemMessage?.length ? [{ role: "system", content: systemMessage }] : []),
+        functions : functions.filter(f => f.active), 
+        messages : [
+          ...formatSystemMessage(systemMessage, source),
           ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
           formatMessage({
             sender: 'ME',
             images: createdImages,
             text: message?.text
           }, source)
-        ],
-        stream: true
-      });
+        ]
+      })
 
-      let botMessage = '';
+      const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botResponse, sender: 'AI', topic_id: selected?.id, created });
 
-      for await (const chunk of stream) {
-        botMessage += (chunk.choices[0]?.delta?.content || "");
+      setMessages([
+        ...messages,
+        { ...message, images: createdImages },
+        { text: createdBotMessage?.text, sender: 'AI', topic_id: selected?.id, created }
+      ]);
 
-        if (new Date() as any - lastUpdate > 500 || chunk.choices[0]?.finish_reason) {
-          const updatedMessages = [
-            ...messages,
-            { text: message?.text, images: createdImages, sender: 'ME', topic_id: selected?.id, created },
-            { text: botMessage, sender: 'AI', topic_id: selected?.id, created }
-          ];
-
-          startTransition(() => {
-            setMessages(updatedMessages);
-          });
-
-          lastUpdate = new Date();
-        }
-      }
-
-      await window.ipcRenderer.invoke('createMessage', { text: botMessage, sender: 'AI', topic_id: selected?.id, created });
-
-      setIsProcessing(false);
+      return setIsProcessing(false);
     } catch (error: any) {
       setIsProcessing(false);
 
       openSnackbar({ open: true, message: error?.message });
     }
   };
+
+  const handleStopStreaming = async () => {
+    await window.ipcRenderer.invoke('stopCompletion');
+  } 
 
   return (
     <TextField
@@ -176,13 +169,23 @@ export default function InputChatField(props: any) {
                 />
                 <AttachFileIcon />
               </IconButton>
-              <IconButton
-                aria-label="Send message"
-                onClick={handleSubmit}
-                edge="end"
-              >
-                <SendIcon />
-              </IconButton>
+              {isProcessing ? (
+                <IconButton
+                  aria-label="Stop"
+                  onClick={handleStopStreaming}
+                  edge="end"
+                >
+                  <StopIcon />
+                </IconButton>
+              ) : (
+                <IconButton
+                  aria-label="Send message"
+                  onClick={handleSubmit}
+                  edge="end"
+                >
+                  <SendIcon />
+                </IconButton>
+              )}
             </InputAdornment>
           )
         },

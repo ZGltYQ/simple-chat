@@ -3,10 +3,11 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import { drizzle } from 'drizzle-orm/libsql';
-import { eq } from 'drizzle-orm';
 import { createClient } from '@libsql/client';
-import runMigration from '../db/migration';
-import { topicsTable, messagesTable, settingsTable, imagesTable } from '../db/schema'
+import runMigration from '../db/migrations';
+import { initLLMByConfig } from '../services/settings';
+import LLModel from '../models/LLModel';
+import Router from '../routers';
 
 const client = createClient({ url: 'file:story' });
 const db = drizzle(client);
@@ -50,10 +51,6 @@ async function createWindow() {
     win.loadFile(indexHtml)
   }
 
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
-  })
-
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     
@@ -63,7 +60,11 @@ async function createWindow() {
 
 app.whenReady().then(async () => {
   await runMigration(db);
+
+  Router(ipcMain);
+  
   await createWindow();
+  await initLLMByConfig();
 })
 
 app.on('window-all-closed', () => {
@@ -73,117 +74,33 @@ app.on('window-all-closed', () => {
 
 app.on('second-instance', () => {
   if (win) {
-    // Focus on the main window if the user tried to open another
-    if (win.isMinimized()) win.restore()
-    win.focus()
+    LLModel.dispose().then(() => {
+      if (win?.isMinimized()) win.restore();
+      win?.focus();
+    });
   }
 });
 
-(async () => {
-  ipcMain.handle('getTopics', async () => {
-    const result = await db.select().from(topicsTable);
+let isQuitting = false; 
 
-    return result;
-  })
+app.on('before-quit', async (event) => {
+  if (isQuitting) return;
+  
+  event.preventDefault();
+  isQuitting = true;
 
-  ipcMain.handle('getMessages', async (_, topic_id) => {
-    // Retrieve messages for the given topic_id
-    const messages = await db.select().from(messagesTable).where(eq(messagesTable.topic_id, topic_id));
+  try {
+    await LLModel.dispose();
 
-    // Retrieve images for the given topic_id
-    const images = await db.select().from(imagesTable).where(eq(imagesTable.topic_id, topic_id));
-
-    // Define the type for the accumulator object
-    type ImagesByMessageId = {
-      [key: number]: {
-        id: number;
-        topic_id: number;
-        base64_image: string;
-        message_id: number;
-      }[];
-    };
-
-    // Group images by message_id
-    const imagesByMessageId = images.reduce<ImagesByMessageId>((acc, image) => {
-      if (!acc[image.message_id]) acc[image.message_id] = [];
-      
-      acc[image.message_id].push(image);
-
-      return acc;
-    }, {});
-
-    // Combine messages with their related images
-    const messagesWithImages = messages.map(message => ({
-      ...message,
-      images: imagesByMessageId[message.id] || []
-    }));
-
-    return messagesWithImages;
-  })
-
-  ipcMain.handle('createMessage', async (_, args) => {
-    const response = await db.insert(messagesTable).values(args);
-
-    const lastInsertRowid = Number(response.lastInsertRowid);
-
-    const insertedMessage = await db.select().from(messagesTable).where(eq(messagesTable.id, lastInsertRowid));
-
-    return insertedMessage[0];
-  })
-
-  ipcMain.handle('createTopic', async (_, title) => {
-    const response = await db.insert(topicsTable).values({ title });
-
-    return response
-  })
-
-  ipcMain.handle('deleteTopic', async (_, id) => {
-    const response = await db.delete(topicsTable).where(eq(topicsTable?.id, id));
-
-    return response
-  })
-
-  ipcMain.handle('updateTopic', async (_, { id, ...args }) => {
-    const response = await db.update(topicsTable).set(args).where(eq(topicsTable.id, id));
-
-    return response
-  })
-
-  ipcMain.handle('createSettings', async (_, args) => {
-    await db.delete(settingsTable).where(eq(settingsTable?.id, 1));
-
-    const response = await db.insert(settingsTable).values(args);
-
-    return response
-  })
-
-  ipcMain.handle('getSettings', async () => {
-    const response = await db.select().from(settingsTable).where(eq(settingsTable?.id, 1));
-
-    return response[0]
-  })
-
-  ipcMain.handle('createImage', async (_, args) => {
-    const response = await db.insert(imagesTable).values(args);
-
-    return response;
-  });
-
-  ipcMain.handle('getImagesByMessage', async (_, message_id) => {
-    const response = await db.select().from(imagesTable).where(eq(imagesTable.message_id, message_id));
-
-    return response;
-  });
-
-  ipcMain.handle('getImagesByTopic', async (_, topic_id) => {
-    const response = await db.select().from(imagesTable).where(eq(imagesTable.topic_id, topic_id));
-
-    return response;
-  });
-})();
+    app.quit();
+  } catch (error) {
+    app.quit(); 
+  }
+});
 
 app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
+  const allWindows = BrowserWindow.getAllWindows();
+
   if (allWindows.length) {
     allWindows[0].focus()
   } else {
