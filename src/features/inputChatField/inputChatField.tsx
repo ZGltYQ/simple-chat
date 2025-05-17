@@ -1,5 +1,5 @@
 import { useStore } from "zustand";
-import { chatStore, settingsStore, topicsStore, snackbarStore } from "@/app/store";
+import { chatStore, settingsStore, topicsStore, snackbarStore, functionsStore } from "@/app/store";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import SendIcon from '@mui/icons-material/Send';
 import StopIcon from '@mui/icons-material/Stop';
@@ -23,6 +23,7 @@ export default function InputChatField(props: any) {
   const model = useStore(settingsStore, s => s.formData?.model);
   const selected = useStore(topicsStore, s => s.selected);
   const source = useStore(settingsStore, state => state.formData?.source);
+  const functions = useStore(functionsStore, state => state.list);
 
   const handleAttachImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -104,6 +105,7 @@ export default function InputChatField(props: any) {
 
       const botResponse = await window.ipcRenderer.invoke('startCompletion', {
         model,
+        functions : functions.filter(f => f.active), 
         messages : [
           ...formatSystemMessage(systemMessage, source),
           ...messages.slice(-contextCount).map(m => formatMessage(m, source)),

@@ -25,8 +25,8 @@ export default function DeleteTopicButton({ id} : {id: string}) {
     }
 
     return (
-        <IconButton size="small" onClick={handleDeleteTopic}>
-            <DeleteIcon fontSize='small'/>
+        <IconButton sx={{ width: 30, height: 30 }} onClick={handleDeleteTopic}>
+            <DeleteIcon sx={{ width: 20, height: 20 }} fontSize='small'/>
         </IconButton>
     )
 }

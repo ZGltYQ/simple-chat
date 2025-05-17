@@ -16,9 +16,13 @@ type DrawerStore = {
     setOpen: (open: boolean) => void;
 }
 
-type Model = {
-    label: string;
-    value: string;
+export type FunctionData = {
+    name: string;
+    description: string;
+    params: string;
+    active: boolean;
+    handler: string;
+    id?: string | number;
 }
 
 type SettingsFormData = {
@@ -30,7 +34,7 @@ type SettingsFormData = {
     context_size: number;
     batch_size: number;
     threads: number;
-    system_message: string
+    system_message: string;
 }
 
 type SnackbarStore = {
@@ -57,6 +61,14 @@ type ChatStore = {
     setImages: (images: string[]) => void;
 }
 
+type Functions = {
+    formData: FunctionData;
+    list: FunctionData[];
+    setList: (list: FunctionData[]) => void
+    setFormData: (data: Partial<FunctionData>) => void
+    resetFormData: () => void
+}
+
 export type TopicsStore = {
     topics: Topic[];
     editingTopic: string | null;
@@ -65,6 +77,27 @@ export type TopicsStore = {
     setEditingTopic: (editingId: string | null) => void;
     setTopics: (topics: Topic[]) => void;
 };
+
+export const functionsStore = create<Functions>((set, get) => ({
+    formData : {
+        name: '',
+        description: '',
+        active: false,
+        params: '',
+        handler: '',
+    },
+    list : [],
+    setList: (list: FunctionData[]) => set({ list }),
+    resetFormData: () => set({ formData: { name: '', active: false, description: '', params: '', handler: '' } }),
+    setFormData: (data: Partial<Functions>) => {
+        set((state) => ({
+            formData: {
+                ...state.formData,
+                ...data
+            }
+        }));
+    }
+}))
 
 export const topicsStore = create<TopicsStore>((set) => ({
     topics: [],

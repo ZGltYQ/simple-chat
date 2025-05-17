@@ -13,8 +13,6 @@ export default function GPULayersSlider() {
         }
     }
 
-    console.log({context_size})
-
     return (
         <div>
             <Typography gutterBottom>Context size</Typography>

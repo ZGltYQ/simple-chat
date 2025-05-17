@@ -26,12 +26,16 @@ export const formatMessage = (message: any, source: string = MODELS.OPENAI) => {
     case MODELS.DEEPSEEK:
       return {
         role: message.sender === 'ME' ? 'user' : 'assistant',
-        content: message.text
+        content: message.images?.length ? [ message.images.map((img: any) => img.description), message.text ].join('\n') : message.text
       };
     case MODELS.LOCAL:
       return {
         type: message.sender === 'ME' ? 'user' : 'model',
-        ...message.sender === 'ME' ? { text: message.text } : { response : [ message.text ] }
+        ...message.sender === 'ME' ? { 
+          text: message.images?.length ? [ message.images.map((img: any) => img.description), message.text ].join('\n') : message.text 
+        } : { 
+          response : [ message.text ] 
+        }
       };
     default:
       return {
@@ -58,7 +62,7 @@ export const formatSystemMessage = (message: string, source: string = MODELS.OPE
     case MODELS.LOCAL:
       return [{
         type: 'system',
-        content: message
+        text: message
       }];
     default:
       return [{

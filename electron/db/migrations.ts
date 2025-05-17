@@ -42,6 +42,7 @@ const migrations = [
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             base64_image TEXT NOT NULL,
             message_id INTEGER NOT NULL,
+            description TEXT,
             topic_id INTEGER NOT NULL,
             FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
             FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
@@ -54,6 +55,17 @@ const migrations = [
             (1, 'openai', 1, '', 'gpt-4o', '', 30),
             (2, 'deepseek', 0, '', 'deepseek-chat', '', 30),
             (3, 'local', 0, '', '', '', 30)`
+    },
+    {
+        name : 'create_functions',
+        query: `CREATE TABLE functions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            active INTEGER DEFAULT 0 NOT NULL,
+            params TEXT NOT NULL,
+            handler TEXT NOT NULL
+        );`
     }
 ];
 

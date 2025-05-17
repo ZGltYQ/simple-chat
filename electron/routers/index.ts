@@ -1,4 +1,4 @@
-import { messages, topics, images, llm, settings } from '../services';
+import { messages, topics, images, llm, settings, functions } from '../services';
 export default function Router(ipcMain: any) {
     ipcMain.handle('getTopics', topics.getTopics)
     ipcMain.handle('createTopic', topics.createTopic)
@@ -15,5 +15,11 @@ export default function Router(ipcMain: any) {
     ipcMain.handle('getSettings', settings.getSettings);
     ipcMain.handle('createSettings', settings.createSettings);
     ipcMain.handle('initLLMByConfig', settings.initLLMByConfig);
-    ipcMain.handle('updateSettingsSource', settings.updateSettingsSource)
+    ipcMain.handle('updateSettingsSource', settings.updateSettingsSource);
+    ipcMain.handle('getFunctions', functions.getFunctions);
+    ipcMain.handle('getFunction', functions.getFunction);
+    ipcMain.handle('createFunction', functions.createFunction);
+    ipcMain.handle('deleteFunction', functions.deleteFunction);
+    ipcMain.handle('toggleFunction', functions.toggleFunction);
+    ipcMain.handle('updateFunction', functions.updateFunction);
 }

@@ -19,7 +19,7 @@ export const deleteTopic = async (_:any, id: number) => {
 }
 
 export const updateTopic = async (_:any, { id, ...args }: any) => {
-    const response = await Topic.update(id, args);
+    const response = await Topic.update({id}, args);
     
     return response
 }

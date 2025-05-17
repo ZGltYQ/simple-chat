@@ -7,11 +7,12 @@ import EditTopicButton from '@/features/editTopicButton';
 import DeleteTopicButton from '@/features/deleteTopicButton';
 import InputTopicField from '@/features/inputTopicField';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 import { DEFAULT_STYLES } from '@/app/config';
 import { useStore } from 'zustand';
 import { drawerStore, topicsStore } from '@/app/store';
 import { List, ListItem, ListItemIcon } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export default function Drawer() {
     const open = useStore(drawerStore, state => state.open);
@@ -50,13 +51,15 @@ export default function Drawer() {
             <List>
                 {topics.map(({id, title}) => (
                     <ListItem key={id}>
-                        <SelectTopicButton id={id} title={title}>
-                            <ListItemIcon>
-                                <EditTopicButton id={id} />
-                                <DeleteTopicButton id={id} />
-                            </ListItemIcon>
-                            <InputTopicField id={id} title={title}/>
-                        </SelectTopicButton>
+                        <Tooltip title={title}>
+                            <SelectTopicButton sx={{ display: 'flex', gap: 1, padding: 1, borderRadius: 2 }} id={id} title={title}>
+                                <ListItemIcon>
+                                    <DeleteTopicButton id={id} />
+                                    <EditTopicButton id={id} />
+                                </ListItemIcon>
+                                <InputTopicField id={id} title={title}/>
+                            </SelectTopicButton>
+                        </Tooltip>
                     </ListItem>
                 ))}
             </List>

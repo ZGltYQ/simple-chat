@@ -7,7 +7,6 @@ export default function StreamedMessage() {
 
     useEffect(() => {
         window.ipcRenderer.on('llm-chunk', (event: any, { chunk, complied }: any) => {
-            console.log({ chunk, complied })
             startTransition(() => {
                 if (complied) setStreamedMessage('')
                 else setStreamedMessage(prev => prev + chunk);

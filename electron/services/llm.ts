@@ -2,25 +2,26 @@ import LLModel from "../models/LLModel";
 import { dialog } from "electron";
 
 
-export const startCompletion = async (event: any, { model, messages }: { model: string, messages: { role: string, text: string }[] }) => {
+export const startCompletion = async (event: any, { model, messages, functions }: { model: string, functions: any, messages: { role: string, text: string }[] }) => {
     let botMessage = '';
 
-    if (LLModel.state.openai) {
-        const stream = await LLModel.streamAPI({
-            model,
-            messages
-        });
+    console.log({messages})
 
-        for await (const chunk of stream) {
+    if (LLModel.state.openai || LLModel.state.deepseek) {
+        await LLModel.streamAPI({
+            model,
+            messages,
+            functions
+        }, (chunk) => {
             botMessage += (chunk.choices[0]?.delta?.content || '');
             event.sender.send('llm-chunk', { chunk: (chunk.choices[0]?.delta?.content || ''), complied: chunk.choices[0]?.finish_reason });
-        }
+        });
 
         return botMessage;
     }
 
     if (LLModel.state.chatSession) {
-        await LLModel.streamLocal(messages, (chunk: string) => {
+        await LLModel.streamLocal({ messages, functions}, (chunk: string) => {
             botMessage += chunk;
             event.sender.send('llm-chunk', { chunk, complied: false });
         })

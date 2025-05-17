@@ -21,8 +21,7 @@ export const initLLMByConfig = async () => {
   }
 
   if (response?.api_token?.length && response?.source === 'deepseek') {
-    return LLModel.initOpenAI({
-      base_url: 'https://api.deepseek.com',
+    return LLModel.initDeepSeek({
       api_token: response?.api_token
     })
   }
