@@ -66,12 +66,12 @@ export default function InputChatField(props: any) {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event?.key === 'Enter' && !event.shiftKey && !isProcessing) handleSubmit();
+    if (event?.key === 'Enter' && !event.shiftKey && !isProcessing[selected?.id]) handleSubmit();
   };
 
   const handleSubmit = async () => {
     try {
-      setIsProcessing(true);
+      setIsProcessing(true, selected?.id);
       setImages([]);
       setInput('');
 
@@ -99,16 +99,17 @@ export default function InputChatField(props: any) {
       }
 
       setMessages([
-        ...messages,
+        ...messages[selected?.id],
         { ...message, images: createdImages }
-      ]);
+      ], selected?.id);
 
       const botResponse = await window.ipcRenderer.invoke('startCompletion', {
+        topic : selected?.id,
         model,
         functions : functions.filter(f => f.active), 
         messages : [
           ...formatSystemMessage(systemMessage, source),
-          ...messages.slice(-contextCount).map(m => formatMessage(m, source)),
+          ...messages[selected?.id].slice(-contextCount).map((m: any) => formatMessage(m, source)),
           formatMessage({
             sender: 'ME',
             images: createdImages,
@@ -120,14 +121,14 @@ export default function InputChatField(props: any) {
       const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botResponse, sender: 'AI', topic_id: selected?.id, created });
 
       setMessages([
-        ...messages,
+        ...messages[selected?.id],
         { ...message, images: createdImages },
         { text: createdBotMessage?.text, sender: 'AI', topic_id: selected?.id, created }
-      ]);
+      ], selected?.id);
 
-      return setIsProcessing(false);
+      return setIsProcessing(false, selected?.id);
     } catch (error: any) {
-      setIsProcessing(false);
+      setIsProcessing(false, selected?.id);
 
       openSnackbar({ open: true, message: error?.message });
     }
@@ -143,7 +144,7 @@ export default function InputChatField(props: any) {
       fullWidth
       id="outlined-basic"
       label="Enter message"
-      disabled={isProcessing}
+      disabled={isProcessing[selected?.id]}
       multiline
       maxRows={10}
       value={input}
@@ -169,7 +170,7 @@ export default function InputChatField(props: any) {
                 />
                 <AttachFileIcon />
               </IconButton>
-              {isProcessing ? (
+              {isProcessing[selected?.id] ? (
                 <IconButton
                   aria-label="Stop"
                   onClick={handleStopStreaming}

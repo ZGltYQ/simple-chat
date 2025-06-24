@@ -52,11 +52,11 @@ type SettingsStore = {
 
 type ChatStore = {
     input: string;
-    messages: any[];
+    messages: Record<string, any>;
     images: string[];
-    isProcessing: boolean;
-    setIsProcessing: (isProcessing: boolean) => void;
-    setMessages: (messages: any[]) => void;
+    isProcessing: Record<string, boolean>;
+    setIsProcessing: (isProcessing: boolean, topicId: string) => void;
+    setMessages: (messages: any[], topicId: string) => void;
     setInput: (input: string) => void;
     setImages: (images: string[]) => void;
 }
@@ -148,11 +148,25 @@ export const snackbarStore = create<SnackbarStore>((set) => ({
 
 export const chatStore = create<ChatStore>((set) => ({
     input: '',
-    messages: [],
+    messages: {},
     images : [],
-    isProcessing: false,
-    setIsProcessing: (isProcessing: boolean) => set({ isProcessing }),
-    setMessages: (messages: any) => set({ messages }),
+    isProcessing: {},
+    setIsProcessing: (isProcessing: boolean, topicId: string) => set(state => {
+        return {
+            isProcessing: {
+                ...state.isProcessing,
+                [topicId]: isProcessing
+            }
+        }
+    }),
+    setMessages: (messages: any, topicId: string) => set(state => {
+        return {
+            messages: {
+                ...state.messages,
+                [topicId]: messages
+            }
+        }
+    }),
     setInput: (input: string) => set({ input }),
     setImages: (images: any) => set({ images }),
 }))

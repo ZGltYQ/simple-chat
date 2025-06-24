@@ -2,7 +2,7 @@ import LLModel from "../models/LLModel";
 import { dialog } from "electron";
 
 
-export const startCompletion = async (event: any, { model, messages, functions }: { model: string, functions: any, messages: { role: string, text: string }[] }) => {
+export const startCompletion = async (event: any, { model, messages, functions, topic }: { model: string, functions: any, messages: { role: string, text: string }[], topic?: string }) => {
     let botMessage = '';
 
     console.log({messages})
@@ -14,7 +14,7 @@ export const startCompletion = async (event: any, { model, messages, functions }
             functions
         }, (chunk) => {
             botMessage += (chunk.choices[0]?.delta?.content || '');
-            event.sender.send('llm-chunk', { chunk: (chunk.choices[0]?.delta?.content || ''), complied: chunk.choices[0]?.finish_reason });
+            event.sender.send('llm-chunk', { chunk: (chunk.choices[0]?.delta?.content || ''), complied: chunk.choices[0]?.finish_reason, topic });
         });
 
         return botMessage;
@@ -23,10 +23,10 @@ export const startCompletion = async (event: any, { model, messages, functions }
     if (LLModel.state.chatSession) {
         await LLModel.streamLocal({ messages, functions}, (chunk: string) => {
             botMessage += chunk;
-            event.sender.send('llm-chunk', { chunk, complied: false });
+            event.sender.send('llm-chunk', { chunk, complied: false, topic });
         })
     
-        event.sender.send('llm-chunk', { chunk: '', complied: true });
+        event.sender.send('llm-chunk', { chunk: '', complied: true, topic });
 
         return botMessage;
     }

@@ -14,7 +14,7 @@ export default function ChatMessage({ text, sender, created, images } : { text: 
     return (
         <div style={{ display: 'flex', maxWidth: '100%', columnGap: 15, alignSelf: sender === 'ME' ? 'flex-start' : 'flex-end' }}>
             {sender === 'ME' && <Avatar>{sender}</Avatar>}
-            <MessageComponent sx={{ display: 'flex', flexDirection: 'column', maxWidth: 'calc(100% - 70px)', lineBreak: 'anywhere' }}>
+            <MessageComponent sx={{ display: 'flex', flexDirection: 'column', maxWidth: 'calc(100% - 70px)', lineBreak: 'anywhere', overflowWrap: 'break-word', wordBreak: 'break-all' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 10 }}>
                     {images && images.map((image, index) => (
                         <img key={index} src={image.base64_image} alt="message" style={{ maxWidth: 200, objectFit: 'cover', marginBottom: 10 }} />

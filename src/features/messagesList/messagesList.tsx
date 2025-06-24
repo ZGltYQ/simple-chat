@@ -14,13 +14,13 @@ export default function MessagesList({children}: {children?: React.ReactNode}) {
         (async () => {
             const messages = await window.ipcRenderer.invoke('getMessages', selected?.id);
     
-            setMessages(messages);
+            setMessages(messages, selected?.id);
         })()
     }, [ selected ])
     
     return (
         <AutoScrollWrapper>
-            {messages.map((message, index) => (
+            {(messages?.[selected?.id] || []).map((message: any, index: number) => (
                 <ChatMessage key={message.id || index} {...message}/>
             ))}
             {children}

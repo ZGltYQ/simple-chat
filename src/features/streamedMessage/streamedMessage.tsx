@@ -1,15 +1,22 @@
 import { useEffect, useState, useTransition } from "react";
 import ChatMessage from "@/shared/ui/chatMessage";
+import { useStore } from "zustand";
+import { topicsStore } from "@/app/store";
 
 export default function StreamedMessage() {
     const [ _, startTransition ] = useTransition();
-    const [ streamedMessage, setStreamedMessage ] = useState<string>('');
+    const selected = useStore(topicsStore, state => state.selected);
+    const [ streamedMessage, setStreamedMessage ] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        window.ipcRenderer.on('llm-chunk', (event: any, { chunk, complied }: any) => {
+        window.ipcRenderer.on('llm-chunk', (event: any, { chunk, complied, topic }: any) => {
             startTransition(() => {
-                if (complied) setStreamedMessage('')
-                else setStreamedMessage(prev => prev + chunk);
+                console.log({topic})
+                if (complied) setStreamedMessage({ [topic]: '' });
+                else setStreamedMessage(prev => ({
+                    ...prev,
+                    [topic]: (prev?.[topic] || '') + chunk
+                }));
             })
         })
 
@@ -18,5 +25,5 @@ export default function StreamedMessage() {
         }
     }, [ ])
 
-    return !!streamedMessage?.length ? <ChatMessage text={streamedMessage} sender="AI" /> : null
+    return !!streamedMessage[selected?.id]?.length ? <ChatMessage text={streamedMessage[selected?.id]} sender="AI" /> : null
 }
