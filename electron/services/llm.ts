@@ -5,8 +5,6 @@ import { dialog } from "electron";
 export const startCompletion = async (event: any, { model, messages, functions, topic }: { model: string, functions: any, messages: { role: string, text: string }[], topic?: string }) => {
     let botMessage = '';
 
-    console.log({messages})
-
     if (LLModel.state.openai || LLModel.state.deepseek) {
         await LLModel.streamAPI({
             model,
