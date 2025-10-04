@@ -1,14 +1,18 @@
 import LLModel from "../models/LLModel";
 import { dialog } from "electron";
+import { filterMessagesByTokenLimit } from "../utils/tokenCounter";
 
 
-export const startCompletion = async (event: any, { model, messages, functions, topic }: { model: string, functions: any, messages: { role: string, text: string }[], topic?: string }) => {
+export const startCompletion = async (event: any, { model, messages, functions, topic, contextSize }: { model: string, functions: any, messages: { role: string, text: string }[], topic?: string, contextSize?: number }) => {
     let botMessage = '';
+
+    // Filter messages to fit within context window if contextSize is provided
+    const filteredMessages = contextSize ? filterMessagesByTokenLimit(messages, contextSize) : messages;
 
     if (LLModel.state.openai || LLModel.state.deepseek) {
         await LLModel.streamAPI({
             model,
-            messages,
+            messages: filteredMessages,
             functions
         }, (chunk) => {
             botMessage += (chunk.choices[0]?.delta?.content || '');
@@ -19,7 +23,7 @@ export const startCompletion = async (event: any, { model, messages, functions, 
     }
 
     if (LLModel.state.chatSession) {
-        await LLModel.streamLocal({ messages, functions}, (chunk: string) => {
+        await LLModel.streamLocal({ messages: filteredMessages, functions}, (chunk: string) => {
             botMessage += chunk;
             event.sender.send('llm-chunk', { chunk, complied: false, topic });
         })

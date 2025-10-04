@@ -1,5 +1,5 @@
 import React from "react";
-import Slide from '@mui/material/Slide';
+import Fade from '@mui/material/Fade';
 import { TransitionProps } from "@mui/material/transitions";
 
 export default React.forwardRef(function Transition(
@@ -8,5 +8,5 @@ export default React.forwardRef(function Transition(
     },
     ref: React.Ref<unknown>,
   ) {
-    return <Slide direction="up" ref={ref} {...props} />;
+    return <Fade ref={ref} {...props} timeout={200} />;
   })

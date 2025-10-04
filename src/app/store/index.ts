@@ -28,7 +28,6 @@ export type FunctionData = {
 type SettingsFormData = {
     source: string;
     api_token: string;
-    context_messages: number;
     model: string;
     gpu_layers: number;
     context_size: number;
@@ -117,7 +116,6 @@ export const settingsStore = create<SettingsStore>((set) => ({
     formData: {
         source : MODELS.OPENAI,
         api_token: '',
-        context_messages: 30,
         gpu_layers: 35,
         context_size: 8192,
         batch_size: 512,

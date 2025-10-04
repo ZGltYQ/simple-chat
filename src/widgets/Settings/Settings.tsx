@@ -7,7 +7,6 @@ import CloseSettingsButton from "@/features/closeSettingsButton";
 import SaveSettingsButton from "@/features/saveSettingsButton";
 import InputApiToken from "@/features/inputApiToken";
 import SourceDropdown from "@/features/sourceDropdown";
-import ContextMessagesSlider from "@/features/contextMessagesSlider";
 import ListApiModels from "@/features/listApiModels";
 import UploadLocalModel   from "@/features/uploadLocalModel";
 import SystemMessageField from "@/features/systemMessageField";
@@ -49,7 +48,7 @@ export default function Settings() {
                     <>
                         <SourceDropdown/>
                         <InputApiToken />
-                        <ContextMessagesSlider/>
+                        <ContextSizeSlider/>
                         <ListApiModels/>
                         <SystemMessageField/>
                         <FunctionCallingField/>
@@ -60,7 +59,7 @@ export default function Settings() {
                     <>
                         <SourceDropdown/>
                         <InputApiToken />
-                        <ContextMessagesSlider/>
+                        <ContextSizeSlider/>
                         <ListApiModels/>
                         <SystemMessageField/>
                         <FunctionCallingField/>
@@ -71,10 +70,9 @@ export default function Settings() {
                     <>
                         <SourceDropdown/>
                         <UploadLocalModel/>
-                        <ContextMessagesSlider/>
+                        <ContextSizeSlider/>
                         <SystemMessageField/>
                         <GPULayersSlider/>
-                        <ContextSizeSlider/>
                         <BatchSizeSlider/>
                         <ThreadsSlider/>
                         <FunctionCallingField/>
@@ -93,6 +91,9 @@ export default function Settings() {
                 open={open}
                 onClose={() => setOpen(false)}
                 TransitionComponent={Transition}
+                keepMounted
+                disableEnforceFocus
+                disableRestoreFocus
             >
                 <AppBar sx={{ position: 'relative' }}>
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>

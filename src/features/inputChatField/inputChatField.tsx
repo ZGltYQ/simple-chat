@@ -18,7 +18,7 @@ export default function InputChatField(props: any) {
   const setMessages = useStore(chatStore, s => s.setMessages);
   const openSnackbar = useStore(snackbarStore, s => s.openSnackbar);
 
-  const contextCount = useStore(settingsStore, s => s.formData?.context_messages);
+  const contextSize = useStore(settingsStore, s => s.formData?.context_size);
   const systemMessage = useStore(settingsStore, s => s.formData?.system_message);
   const model = useStore(settingsStore, s => s.formData?.model);
   const selected = useStore(topicsStore, s => s.selected);
@@ -106,16 +106,17 @@ export default function InputChatField(props: any) {
       const botResponse = await window.ipcRenderer.invoke('startCompletion', {
         topic : selected?.id,
         model,
-        functions : functions.filter(f => f.active), 
+        functions : functions.filter(f => f.active),
         messages : [
           ...formatSystemMessage(systemMessage, source),
-          ...messages[selected?.id].slice(-contextCount).map((m: any) => formatMessage(m, source)),
+          ...messages[selected?.id].map((m: any) => formatMessage(m, source)),
           formatMessage({
             sender: 'ME',
             images: createdImages,
             text: message?.text
           }, source)
-        ]
+        ],
+        contextSize
       })
 
       const createdBotMessage = await window.ipcRenderer.invoke('createMessage', { text: botResponse, sender: 'AI', topic_id: selected?.id, created });

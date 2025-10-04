@@ -50,8 +50,8 @@ const migrations = [
     },
     {
         name: 'insert_default_sources',
-        query: `INSERT INTO settings (id, source, selected, api_token, model, system_message, context_messages) 
-            VALUES 
+        query: `INSERT INTO settings (id, source, selected, api_token, model, system_message, context_messages)
+            VALUES
             (1, 'openai', 1, '', 'gpt-4o', '', 30),
             (2, 'deepseek', 0, '', 'deepseek-chat', '', 30),
             (3, 'local', 0, '', '', '', 30)`
@@ -66,6 +66,10 @@ const migrations = [
             params TEXT NOT NULL,
             handler TEXT NOT NULL
         );`
+    },
+    {
+        name: 'remove_context_messages_column',
+        query: `ALTER TABLE settings DROP COLUMN context_messages;`
     }
 ];
 

@@ -2,7 +2,7 @@ import { Slider, Typography } from "@mui/material";
 import { useStore } from "zustand";
 import { settingsStore } from "../../app/store";
 
-export default function GPULayersSlider() {
+export default function ContextSizeSlider() {
     const context_size = useStore(settingsStore, state => state.formData.context_size);
     const setFormData = useStore(settingsStore, state => state.setFormData);
 
